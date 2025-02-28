@@ -16,7 +16,7 @@ import pymysql
 
 # Establish connection
 # OUTPUT: database and cursor
-def getConnection():
+def get_Connection():
     try:
         tngDB = pymysql.connect(
             host="localhost",
@@ -30,7 +30,7 @@ def getConnection():
         return None, None
 
 # Create new database
-def createDatabase():
+def create_Database():
     try:
         # Connect to MySQL server
         tngDB = pymysql.connect(
@@ -88,8 +88,8 @@ def createDatabase():
 
 # Add a member
 # INPUT: Member object
-def writeMember(newMember):
-    tngDB, cursor = getConnection()
+def write_Member(newMember):
+    tngDB, cursor = get_Connection()
     if not tngDB or not cursor:
         return
 
@@ -126,8 +126,8 @@ def writeMember(newMember):
 
 # Add an event
 # INPUT: Event object
-def writeEvent(newEvent):
-    tngDB, cursor = getConnection()
+def write_Event(newEvent):
+    tngDB, cursor = get_Connection()
     if not tngDB or not cursor:
         return
 
@@ -153,8 +153,8 @@ def writeEvent(newEvent):
 
 # Remove a member from the database
 # INPUT: member ID
-def removeMember(memberID):
-    tngDB, cursor = getConnection()
+def remove_Member(memberID):
+    tngDB, cursor = get_Connection()
     if not tngDB or not cursor:
         return
 
@@ -179,8 +179,8 @@ def removeMember(memberID):
 
 # Update a member's tag
 # INPUT: member ID and new tag
-def updateTag(memberID, newTag):
-    tngDB, cursor = getConnection()
+def update_Tag(memberID, newTag):
+    tngDB, cursor = get_Connection()
     if not tngDB or not cursor:
         return
 
@@ -206,8 +206,8 @@ def updateTag(memberID, newTag):
 
 # Update a member's name
 # INPUT: member ID and new name
-def updateName(memberID, newName):
-    tngDB, cursor = getConnection()
+def update_Name(memberID, newName):
+    tngDB, cursor = get_Connection()
     if not tngDB or not cursor:
         return
 
@@ -233,8 +233,8 @@ def updateName(memberID, newName):
 
 # Update a member's diet
 # INPUT: member ID and new diet
-def updateDiet(memberID, newDiet):
-    tngDB, cursor = getConnection()
+def update_Diet(memberID, newDiet):
+    tngDB, cursor = get_Connection()
     if not tngDB or not cursor:
         return
 
@@ -260,8 +260,8 @@ def updateDiet(memberID, newDiet):
 
 # Update a member's shirt size
 # INPUT: member ID and new size
-def updateSize(memberID, newSize):
-    tngDB, cursor = getConnection()
+def update_Size(memberID, newSize):
+    tngDB, cursor = get_Connection()
     if not tngDB or not cursor:
         return
 
@@ -287,8 +287,8 @@ def updateSize(memberID, newSize):
 
 # Update a member's shirt cut
 # INPUT: member ID and new cut
-def updateCut(memberID, newCut):
-    tngDB, cursor = getConnection()
+def update_Cut(memberID, newCut):
+    tngDB, cursor = get_Connection()
     if not tngDB or not cursor:
         return
 
@@ -314,8 +314,8 @@ def updateCut(memberID, newCut):
 
 # Update a member's position
 # INPUT: member ID and new position
-def updatePosition(memberID, newPos):
-    tngDB, cursor = getConnection()
+def update_Position(memberID, newPos):
+    tngDB, cursor = get_Connection()
     if not tngDB or not cursor:
         return
 
@@ -341,8 +341,8 @@ def updatePosition(memberID, newPos):
 
 # Update a member's spent points
 # INPUT: member ID and number of points to add
-def updatePointsSpent(memberID, pointsToAdd):
-    tngDB, cursor = getConnection()
+def update_Points_Spent(memberID, pointsToAdd):
+    tngDB, cursor = get_Connection()
     if not tngDB or not cursor:
         return
 
@@ -368,8 +368,8 @@ def updatePointsSpent(memberID, pointsToAdd):
 
 # Update a members coupons
 # INPUT: member ID and number of coupons to add
-def updateMemberCoupons(memberID, couponsToAdd):
-    tngDB, cursor = getConnection()
+def update_Coupons(memberID, couponsToAdd):
+    tngDB, cursor = get_Connection()
     if not tngDB or not cursor:
         return
 
@@ -395,8 +395,8 @@ def updateMemberCoupons(memberID, couponsToAdd):
 
 # Update a member's number of meetings
 # INPUT: member ID and number of meetings to add
-def updateMeetings(memberID, meetingsToAdd):
-    tngDB, cursor = getConnection()
+def update_Meetings(memberID, meetingsToAdd):
+    tngDB, cursor = get_Connection()
     if not tngDB or not cursor:
         return
 
@@ -422,8 +422,8 @@ def updateMeetings(memberID, meetingsToAdd):
 
 # Update a member's hours
 # INPUT: member's ID and hours to add
-def updateHours(memberID, newHours):
-    tngDB, cursor = getConnection()
+def update_Hours(memberID, newHours):
+    tngDB, cursor = get_Connection()
     if not tngDB or not cursor:
         return
 
@@ -459,8 +459,8 @@ def updateHours(memberID, newHours):
 
 # Update if a member is trained or not
 # INPUT: member ID and trained bool
-def updateTraining(memberID, isTrained):
-    tngDB, cursor = getConnection()
+def update_Training(memberID, isTrained):
+    tngDB, cursor = get_Connection()
     if not tngDB or not cursor:
         return
 
@@ -487,8 +487,8 @@ def updateTraining(memberID, isTrained):
 # Get a member's status
 # INPUT: member ID
 # OUTPUT: dictionary with member info
-def getStatus(memberID):
-    tngDB, cursor = getConnection()
+def get_Status(memberID):
+    tngDB, cursor = get_Connection()
     if not tngDB or not cursor:
         return None
 
@@ -522,8 +522,8 @@ def getStatus(memberID):
 # Get the list of all members who attended an event
 # INPUT: event name
 # OUTPUT: event attendees
-def getEventAttendees(eventName):
-    tngDB, cursor = getConnection()
+def get_Attendees(eventName):
+    tngDB, cursor = get_Connection()
     if not tngDB or not cursor:
         return None
 
@@ -551,8 +551,8 @@ def getEventAttendees(eventName):
             tngDB.close()
 
 # Print member database to command line
-def printMemberDB():
-    tngDB, cursor = getConnection()
+def print_Members():
+    tngDB, cursor = get_Connection()
     if not tngDB or not cursor:
         return
 
@@ -586,8 +586,8 @@ def printMemberDB():
             tngDB.close()
 
 # Print event database to command line
-def printEventDatabase():
-    tngDB, cursor = getConnection()
+def print_Events():
+    tngDB, cursor = get_Connection()
     if not tngDB or not cursor:
         return
 
