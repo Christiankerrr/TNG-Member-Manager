@@ -1,4 +1,2 @@
 # TNG-Member-Manager
-ucggvvvi
-ucucugc
-bbob
+DESCRIPTION GOES HERE

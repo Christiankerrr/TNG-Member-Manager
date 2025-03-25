@@ -2,66 +2,61 @@
 # Adrian Fanjoy
 # Database management
 
-# QUESTION: DO WE NEED A SETTER FOR EVERY MEMBER ATTRIBUTE? NOT FOR PYTHON -Matt
-
 import pymysql
 
 # Temporary example code (REMOVE LATER)
 #
-#new_member = Member("001", "tag1", "John Doe", "Vegan", "L", "M", "Member", 10, 2, 5, 1, 1)
-#writeMember(new_member)
+# new_member = Member("001", "tag1", "John Doe", "Vegan", "L", "M", "Member", 10, 2, 5, 1, 1)
+# writeMember(new_member)
 #
-#new_event = Event("Team Meeting", "2025-02-25 14:00:00", "2025-02-25 15:00:00", 60, ["person", "second", "third"])
-#writeEvent(new_event)
+# new_event = Event("Team Meeting", "2025-02-25 14:00:00", "2025-02-25 15:00:00", 60, ["person", "second", "third"])
+# writeEvent(new_event)
 
 # Establish connection
 # OUTPUT: database and cursor
 def get_connection():
-    
-    try:
-        
-        tngDB = pymysql.connect(
-            host = "localhost",
-            user = "root",
-            password = "se300",
-            database = "memberdb"
-        )
-        
-        return tngDB, tngDB.cursor()
-    
-    except pymysql.MySQLError as err:
-        
-        print(f"Database Connection Error: {err}")
-        
-        return None, None
+	try:
+
+		tngDB = pymysql.connect(
+				host = "localhost",
+				user = "root",
+				password = "se300",
+				database = "memberdb"
+				)
+
+		return tngDB, tngDB.cursor()
+
+	except pymysql.MySQLError as err:
+
+		print(f"Database Connection Error: {err}")
+
+		return None, None
 
 # Create new database
 def create_database():
-    
-    try:
-    
-        # Connect to MySQL server
-        tngDB = pymysql.connect(
-            host = "localhost",
-            user = "root",
-            password = "se300"
-        )
-        cursor = tngDB.cursor()
+	try:
 
-        # Check if database exists
-        cursor.execute("SHOW DATABASES")
-        databases = [db[0].lower() for db in cursor.fetchall()]
+		# Connect to MySQL server
+		tngDB = pymysql.connect(
+				host = "localhost",
+				user = "root",
+				password = "se300"
+				)
+		cursor = tngDB.cursor()
 
-        if "memberdb" not in databases:
-    
-            cursor.execute("CREATE DATABASE memberdb")
-            print("Database created successfully")
+		# Check if database exists
+		cursor.execute("SHOW DATABASES")
+		databases = [db[0].lower() for db in cursor.fetchall()]
 
-        # Use the database
-        cursor.execute("USE memberdb")
+		if "memberdb" not in databases:
+			cursor.execute("CREATE DATABASE memberdb")
+			print("Database created successfully")
 
-        # Create members table
-        cursor.execute("""
+		# Use the database
+		cursor.execute("USE memberdb")
+
+		# Create members table
+		cursor.execute("""
             CREATE TABLE IF NOT EXISTS members (
                 id VARCHAR(50) PRIMARY KEY, 
                 tag VARCHAR(100), 
@@ -79,8 +74,8 @@ def create_database():
             )
         """)
 
-        # Create events table
-        cursor.execute("""
+		# Create events table
+		cursor.execute("""
             CREATE TABLE IF NOT EXISTS events (
                 title VARCHAR(255), 
                 start DATETIME, 
@@ -90,517 +85,468 @@ def create_database():
             )
         """)
 
-        print("Tables created successfully")
+		print("Tables created successfully")
 
-    except pymysql.MySQLError as err:
-        
-        print(f"Error: {err}")
+	except pymysql.MySQLError as err:
+
+		print(f"Error: {err}")
 
 # Add a member
 # INPUT: Member object
 def write_member(newMember):
-    
-    tngDB, cursor = get_connection()
-    if not tngDB or not cursor:
-        
-        return
+	tngDB, cursor = get_connection()
+	if not tngDB or not cursor:
+		return
 
-    try:
-        
-        # Check if member already exists by ID or tag
-        cursor.execute("SELECT COUNT(*) FROM members WHERE id = %s OR tag = %s", (newMember.id, newMember.tag))
-        if cursor.fetchone()[0] > 0:
-            
-            print(f"Member with ID {newMember.id} or Tag {newMember.tag} already exists.")
-            return
+	try:
 
-        # Proceed with adding the member if not already in database
-        query = """
+		# Check if member already exists by ID or tag
+		cursor.execute("SELECT COUNT(*) FROM members WHERE id = %s OR tag = %s",
+		               (newMember.discordID, newMember.discordTag))
+		if cursor.fetchone()[0] > 0:
+			print(f"Member with ID {newMember.id} or Tag {newMember.tag} already exists.")
+			return
+
+		# Proceed with adding the member if not already in database
+		query = """
             INSERT INTO members (id, tag, nme, diet, sze, cut, pos, points_spent, coupons, meetings, hours, is_active, is_trained) 
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        values = (
-            newMember.id, newMember.tag, newMember.nme, newMember.diet,
-            newMember.sze, newMember.cut, newMember.pos,
-            newMember.points_spent, newMember.coupons, newMember.meetings,
-            newMember.hours, newMember.is_active, newMember.is_trained
-        )
-        cursor.execute(query, values)
-        tngDB.commit()
-        print("Member added successfully.")
+		values = (
+			newMember.discordID, newMember.discordTag, newMember.name, newMember.diet,
+			newMember.size, newMember.cut, newMember.position,
+			newMember.pointsSpent, newMember.coupons, newMember.meetings,
+			newMember.hours, newMember.isActive, newMember.isTrained
+			)
+		cursor.execute(query, values)
+		tngDB.commit()
+		print("Member added successfully.")
 
-    except pymysql.MySQLError as err:
-        
-        print(f"Error: {err}")
+	except pymysql.MySQLError as err:
 
-    finally:
-        
-        if cursor:
-            
-            cursor.close()
-            
-        if tngDB:
-            
-            tngDB.close()
+		print(f"Error: {err}")
+
+	finally:
+
+		if cursor:
+			cursor.close()
+
+		if tngDB:
+			tngDB.close()
 
 # Add an event
 # INPUT: Event object
 def write_event(newEvent):
+	tngDB, cursor = get_connection()
+	if not tngDB or not cursor:
+		return
 
-    tngDB, cursor = get_connection()
-    if not tngDB or not cursor:
+	try:
 
-        return
-
-    try:
-
-        query = """
+		query = """
             INSERT INTO events (title, start, end, duration, attendees) 
             VALUES (%s, %s, %s, %s, %s)
         """
-        values = (
-            newEvent.title, newEvent.start, newEvent.end,
-            newEvent.duration, ",".join(newEvent.attendees) if isinstance(newEvent.attendees, list) else newEvent.attendees
-        )
-        cursor.execute(query, values)
-        tngDB.commit()
-        print("Event added successfully.")
+		values = (
+			newEvent.title, newEvent.start, newEvent.end,
+			newEvent.duration,
+			",".join(newEvent.attendees) if isinstance(newEvent.attendees, list) else newEvent.attendees
+			)
+		cursor.execute(query, values)
+		tngDB.commit()
+		print("Event added successfully.")
 
-    except pymysql.MySQLError as err:
+	except pymysql.MySQLError as err:
 
-        print(f"Error: {err}")
+		print(f"Error: {err}")
 
-    finally:
+	finally:
 
-        cursor.close()
-        tngDB.close()
+		cursor.close()
+		tngDB.close()
 
 # Remove a member from the database
 # INPUT: member ID
 def remove_member(memberID):
+	tngDB, cursor = get_connection()
+	if not tngDB or not cursor:
+		return
 
-    tngDB, cursor = get_connection()
-    if not tngDB or not cursor:
+	try:
 
-        return
+		query = "DELETE FROM members WHERE id = %s"
+		cursor.execute(query, (memberID,))
+		tngDB.commit()
 
-    try:
+		if cursor.rowcount > 0:
 
-        query = "DELETE FROM members WHERE id = %s"
-        cursor.execute(query, (memberID,))
-        tngDB.commit()
+			print(f"Member with ID '{memberID}' removed successfully.")
 
-        if cursor.rowcount > 0:
+		else:
 
-            print(f"Member with ID '{memberID}' removed successfully.")
+			print(f"No member found with ID '{memberID}'.")
 
-        else:
+	except pymysql.MySQLError as err:
 
-            print(f"No member found with ID '{memberID}'.")
+		print(f"Error: {err}")
 
-    except pymysql.MySQLError as err:
+	finally:
 
-        print(f"Error: {err}")
+		if cursor:
+			cursor.close()
 
-    finally:
-
-        if cursor:
-
-            cursor.close()
-
-        if tngDB:
-
-            tngDB.close()
+		if tngDB:
+			tngDB.close()
 
 # Update a member's tag
 # INPUT: member ID and new tag
 def update_tag(memberID, newTag):
+	tngDB, cursor = get_connection()
 
-    tngDB, cursor = get_connection()
+	if not tngDB or not cursor:
+		return
 
-    if not tngDB or not cursor:
+	try:
 
-        return
+		# Update the member's tag
+		query = "UPDATE members SET tag = %s WHERE id = %s"
+		cursor.execute(query, (newTag, memberID))
+		tngDB.commit()
 
-    try:
+		if cursor.rowcount > 0:
 
-        # Update the member's tag
-        query = "UPDATE members SET tag = %s WHERE id = %s"
-        cursor.execute(query, (newTag, memberID))
-        tngDB.commit()
+			print(f"Member with ID '{memberID}' tag updated successfully.")
 
-        if cursor.rowcount > 0:
+		else:
 
-            print(f"Member with ID '{memberID}' tag updated successfully.")
+			print(f"No member found with ID '{memberID}'.")
 
-        else:
+	except pymysql.MySQLError as err:
 
-            print(f"No member found with ID '{memberID}'.")
+		print(f"Error: {err}")
 
-    except pymysql.MySQLError as err:
+	finally:
 
-        print(f"Error: {err}")
+		if cursor:
+			cursor.close()
 
-    finally:
-
-        if cursor:
-
-            cursor.close()
-
-        if tngDB:
-
-            tngDB.close()
+		if tngDB:
+			tngDB.close()
 
 # Update a member's name
 # INPUT: member ID and new name
 def update_name(memberID, newName):
+	tngDB, cursor = get_connection()
+	if not tngDB or not cursor:
+		return
 
-    tngDB, cursor = get_connection()
-    if not tngDB or not cursor:
+	try:
 
-        return
+		# Update the member's name
+		query = "UPDATE members SET nme = %s WHERE id = %s"
+		cursor.execute(query, (newName, memberID))
+		tngDB.commit()
 
-    try:
+		if cursor.rowcount > 0:
 
-        # Update the member's name
-        query = "UPDATE members SET nme = %s WHERE id = %s"
-        cursor.execute(query, (newName, memberID))
-        tngDB.commit()
+			print(f"Member with ID '{memberID}' name updated successfully.")
 
-        if cursor.rowcount > 0:
+		else:
 
-            print(f"Member with ID '{memberID}' name updated successfully.")
+			print(f"No member found with ID '{memberID}'.")
 
-        else:
+	except pymysql.MySQLError as err:
 
-            print(f"No member found with ID '{memberID}'.")
+		print(f"Error: {err}")
 
-    except pymysql.MySQLError as err:
+	finally:
 
-        print(f"Error: {err}")
+		if cursor:
+			cursor.close()
 
-    finally:
-
-        if cursor:
-
-            cursor.close()
-
-        if tngDB:
-
-            tngDB.close()
+		if tngDB:
+			tngDB.close()
 
 # Update a member's diet
 # INPUT: member ID and new diet
 def update_diet(memberID, newDiet):
+	tngDB, cursor = get_connection()
 
-    tngDB, cursor = get_connection()
+	if not tngDB or not cursor:
+		return
 
-    if not tngDB or not cursor:
+	try:
 
-        return
+		# Update the member's diet
+		query = "UPDATE members SET diet = %s WHERE id = %s"
+		cursor.execute(query, (newDiet, memberID))
+		tngDB.commit()
 
-    try:
+		if cursor.rowcount > 0:
 
-        # Update the member's diet
-        query = "UPDATE members SET diet = %s WHERE id = %s"
-        cursor.execute(query, (newDiet, memberID))
-        tngDB.commit()
+			print(f"Member with ID '{memberID}' diet updated successfully.")
 
-        if cursor.rowcount > 0:
+		else:
 
-            print(f"Member with ID '{memberID}' diet updated successfully.")
+			print(f"No member found with ID '{memberID}'.")
 
-        else:
+	except pymysql.MySQLError as err:
 
-            print(f"No member found with ID '{memberID}'.")
+		print(f"Error: {err}")
 
-    except pymysql.MySQLError as err:
+	finally:
 
-        print(f"Error: {err}")
+		if cursor:
+			cursor.close()
 
-    finally:
-
-        if cursor:
-
-            cursor.close()
-
-        if tngDB:
-
-            tngDB.close()
+		if tngDB:
+			tngDB.close()
 
 # Update a member's shirt size
 # INPUT: member ID and new size
 def update_size(memberID, newSize):
+	tngDB, cursor = get_connection()
 
-    tngDB, cursor = get_connection()
+	if not tngDB or not cursor:
+		return
 
-    if not tngDB or not cursor:
+	try:
 
-        return
+		# Update the member's shirt size
+		query = "UPDATE members SET sze = %s WHERE id = %s"
+		cursor.execute(query, (newSize, memberID))
+		tngDB.commit()
 
-    try:
+		if cursor.rowcount > 0:
 
-        # Update the member's shirt size
-        query = "UPDATE members SET sze = %s WHERE id = %s"
-        cursor.execute(query, (newSize, memberID))
-        tngDB.commit()
+			print(f"Member with ID '{memberID}' shirt size updated successfully.")
 
-        if cursor.rowcount > 0:
+		else:
 
-            print(f"Member with ID '{memberID}' shirt size updated successfully.")
+			print(f"No member found with ID '{memberID}'.")
 
-        else:
+	except pymysql.MySQLError as err:
 
-            print(f"No member found with ID '{memberID}'.")
+		print(f"Error: {err}")
 
-    except pymysql.MySQLError as err:
+	finally:
 
-        print(f"Error: {err}")
+		if cursor:
+			cursor.close()
 
-    finally:
-
-        if cursor:
-
-            cursor.close()
-
-        if tngDB:
-
-            tngDB.close()
+		if tngDB:
+			tngDB.close()
 
 # Update a member's shirt cut
 # INPUT: member ID and new cut
 def update_cut(memberID, newCut):
+	tngDB, cursor = get_connection()
+	if not tngDB or not cursor:
+		return
 
-    tngDB, cursor = get_connection()
-    if not tngDB or not cursor:
+	try:
 
-        return
+		# Update the member's cut
+		query = "UPDATE members SET cut = %s WHERE id = %s"
+		cursor.execute(query, (newCut, memberID))
+		tngDB.commit()
 
-    try:
+		if cursor.rowcount > 0:
 
-        # Update the member's cut
-        query = "UPDATE members SET cut = %s WHERE id = %s"
-        cursor.execute(query, (newCut, memberID))
-        tngDB.commit()
+			print(f"Member with ID '{memberID}' cut updated successfully.")
 
-        if cursor.rowcount > 0:
+		else:
 
-            print(f"Member with ID '{memberID}' cut updated successfully.")
+			print(f"No member found with ID '{memberID}'.")
 
-        else:
+	except pymysql.MySQLError as err:
 
-            print(f"No member found with ID '{memberID}'.")
+		print(f"Error: {err}")
 
-    except pymysql.MySQLError as err:
+	finally:
 
-        print(f"Error: {err}")
+		if cursor:
+			cursor.close()
 
-    finally:
-
-        if cursor:
-
-            cursor.close()
-
-        if tngDB:
-
-            tngDB.close()
+		if tngDB:
+			tngDB.close()
 
 # Update a member's position
 # INPUT: member ID and new position
 def update_position(memberID, newPos):
+	tngDB, cursor = get_connection()
+	if not tngDB or not cursor:
+		return
 
-    tngDB, cursor = get_connection()
-    if not tngDB or not cursor:
+	try:
 
-        return
+		# Update the member's position
+		query = "UPDATE members SET pos = %s WHERE id = %s"
+		cursor.execute(query, (newPos, memberID))
+		tngDB.commit()
 
-    try:
+		if cursor.rowcount > 0:
 
-        # Update the member's position
-        query = "UPDATE members SET pos = %s WHERE id = %s"
-        cursor.execute(query, (newPos, memberID))
-        tngDB.commit()
+			print(f"Member with ID '{memberID}' position updated successfully.")
 
-        if cursor.rowcount > 0:
+		else:
 
-            print(f"Member with ID '{memberID}' position updated successfully.")
+			print(f"No member found with ID '{memberID}'.")
 
-        else:
+	except pymysql.MySQLError as err:
 
-            print(f"No member found with ID '{memberID}'.")
+		print(f"Error: {err}")
 
-    except pymysql.MySQLError as err:
+	finally:
 
-        print(f"Error: {err}")
+		if cursor:
+			cursor.close()
 
-    finally:
-
-        if cursor:
-
-            cursor.close()
-
-        if tngDB:
-
-            tngDB.close()
+		if tngDB:
+			tngDB.close()
 
 # Update a member's spent points
 # INPUT: member ID and number of points to add
 def update_points_spent(memberID, pointsToAdd):
+	tngDB, cursor = get_connection()
+	if not tngDB or not cursor:
+		return
 
-    tngDB, cursor = get_connection()
-    if not tngDB or not cursor:
+	try:
 
-        return
+		# Update the member's points spent
+		query = "UPDATE members SET points_spent = points_spent + %s WHERE id = %s"
+		cursor.execute(query, (pointsToAdd, memberID))
+		tngDB.commit()
 
-    try:
+		if cursor.rowcount > 0:
 
-        # Update the member's points spent
-        query = "UPDATE members SET points_spent = points_spent + %s WHERE id = %s"
-        cursor.execute(query, (pointsToAdd, memberID))
-        tngDB.commit()
+			print(f"Member with ID '{memberID}' spent points updated successfully.")
 
-        if cursor.rowcount > 0:
+		else:
 
-            print(f"Member with ID '{memberID}' spent points updated successfully.")
+			print(f"No member found with ID '{memberID}'.")
 
-        else:
+	except pymysql.MySQLError as err:
 
-            print(f"No member found with ID '{memberID}'.")
+		print(f"Error: {err}")
 
-    except pymysql.MySQLError as err:
+	finally:
 
-        print(f"Error: {err}")
+		if cursor:
+			cursor.close()
 
-    finally:
-
-        if cursor:
-
-            cursor.close()
-
-        if tngDB:
-
-            tngDB.close()
+		if tngDB:
+			tngDB.close()
 
 # Update a members coupons
 # INPUT: member ID and number of coupons to add
 def update_coupons(memberID, couponsToAdd):
+	tngDB, cursor = get_connection()
+	if not tngDB or not cursor:
+		return
 
-    tngDB, cursor = get_connection()
-    if not tngDB or not cursor:
+	try:
 
-        return
+		# Update the member's coupons
+		query = "UPDATE members SET coupons = coupons + %s WHERE id = %s"
+		cursor.execute(query, (couponsToAdd, memberID))
+		tngDB.commit()
 
-    try:
+		if cursor.rowcount > 0:
 
-        # Update the member's coupons
-        query = "UPDATE members SET coupons = coupons + %s WHERE id = %s"
-        cursor.execute(query, (couponsToAdd, memberID))
-        tngDB.commit()
+			print(f"Member with ID '{memberID}' coupons updated successfully.")
 
-        if cursor.rowcount > 0:
+		else:
 
-            print(f"Member with ID '{memberID}' coupons updated successfully.")
+			print(f"No member found with ID '{memberID}'.")
 
-        else:
+	except pymysql.MySQLError as err:
 
-            print(f"No member found with ID '{memberID}'.")
+		print(f"Error: {err}")
 
-    except pymysql.MySQLError as err:
+	finally:
 
-        print(f"Error: {err}")
+		if cursor:
+			cursor.close()
 
-    finally:
-
-        if cursor:
-
-            cursor.close()
-
-        if tngDB:
-
-            tngDB.close()
+		if tngDB:
+			tngDB.close()
 
 # Update a member's number of meetings
 # INPUT: member ID and number of meetings to add
 def update_meetings(memberID, meetingsToAdd):
+	tngDB, cursor = get_connection()
+	if not tngDB or not cursor:
+		return
 
-    tngDB, cursor = get_connection()
-    if not tngDB or not cursor:
+	try:
 
-        return
+		# Update the member's number of meetings
+		query = "UPDATE members SET meetings = meetings + %s WHERE id = %s"
+		cursor.execute(query, (meetingsToAdd, memberID))
+		tngDB.commit()
 
-    try:
+		if cursor.rowcount > 0:
 
-        # Update the member's number of meetings
-        query = "UPDATE members SET meetings = meetings + %s WHERE id = %s"
-        cursor.execute(query, (meetingsToAdd, memberID))
-        tngDB.commit()
+			print(f"Member with ID '{memberID}' meetings updated successfully.")
 
-        if cursor.rowcount > 0:
+		else:
 
-            print(f"Member with ID '{memberID}' meetings updated successfully.")
+			print(f"No member found with ID '{memberID}'.")
 
-        else:
+	except pymysql.MySQLError as err:
 
-            print(f"No member found with ID '{memberID}'.")
+		print(f"Error: {err}")
 
-    except pymysql.MySQLError as err:
+	finally:
 
-        print(f"Error: {err}")
+		if cursor:
+			cursor.close()
 
-    finally:
-
-        if cursor:
-
-            cursor.close()
-
-        if tngDB:
-
-            tngDB.close()
+		if tngDB:
+			tngDB.close()
 
 # Update a member's hours
 # INPUT: member's ID and hours to add
 def update_hours(memberID, newHours):
+	tngDB, cursor = get_connection()
+	if not tngDB or not cursor:
+		return
 
-    tngDB, cursor = get_connection()
-    if not tngDB or not cursor:
+	try:
 
-        return
+		# Retrieve current hours for the member
+		cursor.execute("SELECT hours FROM members WHERE id = %s", (memberID,))
+		result = cursor.fetchone()
 
-    try:
+		if result:
 
-        # Retrieve current hours for the member
-        cursor.execute("SELECT hours FROM members WHERE id = %s", (memberID,))
-        result = cursor.fetchone()
+			currHours = result[0]
+			totHours = currHours + newHours
 
-        if result:
+			# Update the member's hours in the database
+			query = "UPDATE members SET hours = %s WHERE id = %s"
+			cursor.execute(query, (totHours, memberID))
+			tngDB.commit()
 
-            currHours = result[0]
-            totHours = currHours + newHours
+			print(f"Member hours updated. New hours: {totHours}")
 
-            # Update the member's hours in the database
-            query = "UPDATE members SET hours = %s WHERE id = %s"
-            cursor.execute(query, (totHours, memberID))
-            tngDB.commit()
+		else:
 
-            print(f"Member hours updated. New hours: {totHours}")
+			print(f"No member found with ID: {memberID}")
 
-        else:
+	except pymysql.MySQLError as err:
 
-            print(f"No member found with ID: {memberID}")
+		print(f"Error: {err}")
 
-    except pymysql.MySQLError as err:
+	finally:
 
-        print(f"Error: {err}")
+		if cursor:
+			cursor.close()
 
-    finally:
-
-        if cursor:
-
-            cursor.close()
-
-        if tngDB:
-
-            tngDB.close()
+		if tngDB:
+			tngDB.close()
 
 # Calculate if a member is active or not HOW DO WE DO THIS
 # INPUT: member ID
@@ -608,219 +554,197 @@ def update_hours(memberID, newHours):
 # Update if a member is trained or not
 # INPUT: member ID and trained bool
 def update_training(memberID, isTrained):
+	tngDB, cursor = get_connection()
+	if not tngDB or not cursor:
+		return
 
-    tngDB, cursor = get_connection()
-    if not tngDB or not cursor:
+	try:
 
-        return
+		# Update the member's is_trained status
+		query = "UPDATE members SET is_trained = %s WHERE id = %s"
+		cursor.execute(query, (isTrained, memberID))
+		tngDB.commit()
 
-    try:
+		if cursor.rowcount > 0:
 
-        # Update the member's is_trained status
-        query = "UPDATE members SET is_trained = %s WHERE id = %s"
-        cursor.execute(query, (isTrained, memberID))
-        tngDB.commit()
+			print(f"Member with ID '{memberID}' training status updated successfully.")
 
-        if cursor.rowcount > 0:
+		else:
 
-            print(f"Member with ID '{memberID}' training status updated successfully.")
+			print(f"No member found with ID '{memberID}'.")
 
-        else:
+	except pymysql.MySQLError as err:
 
-            print(f"No member found with ID '{memberID}'.")
+		print(f"Error: {err}")
 
-    except pymysql.MySQLError as err:
+	finally:
 
-        print(f"Error: {err}")
+		if cursor:
+			cursor.close()
 
-    finally:
-
-        if cursor:
-
-            cursor.close()
-
-        if tngDB:
-
-            tngDB.close()
+		if tngDB:
+			tngDB.close()
 
 # Get a member's status
 # INPUT: member ID
 # OUTPUT: dictionary with member info
 def get_status(memberID):
+	tngDB, cursor = get_connection()
+	if not tngDB or not cursor:
+		return None
 
-    tngDB, cursor = get_connection()
-    if not tngDB or not cursor:
+	try:
 
-        return None
+		# Retrieve all data for the member based on the ID
+		cursor.execute("SELECT * FROM members WHERE id = %s", (memberID,))
+		result = cursor.fetchone()
 
-    try:
+		if result:
 
-        # Retrieve all data for the member based on the ID
-        cursor.execute("SELECT * FROM members WHERE id = %s", (memberID,))
-        result = cursor.fetchone()
+			# Get column headers (the column names)
+			column_headers = [desc[0] for desc in cursor.description]
 
-        if result:
+			# Create a dictionary with column headers as keys and member data as values
+			member_data = dict(zip(column_headers, result))
 
-            # Get column headers (the column names)
-            column_headers = [desc[0] for desc in cursor.description]
+			return member_data
 
-            # Create a dictionary with column headers as keys and member data as values
-            member_data = dict(zip(column_headers, result))
+		else:
 
-            return member_data
+			print(f"No member found with ID: {memberID}")
+			return None
 
-        else:
+	except pymysql.MySQLError as err:
 
-            print(f"No member found with ID: {memberID}")
-            return None
+		print(f"Error: {err}")
+		return None
 
-    except pymysql.MySQLError as err:
+	finally:
 
-        print(f"Error: {err}")
-        return None
+		if cursor:
+			cursor.close()
 
-    finally:
-
-        if cursor:
-
-            cursor.close()
-
-        if tngDB:
-
-            tngDB.close()
+		if tngDB:
+			tngDB.close()
 
 # Get the list of all members who attended an event
 # INPUT: event name
 # OUTPUT: event attendees
 def get_attendees(eventName):
+	tngDB, cursor = get_connection()
+	if not tngDB or not cursor:
+		return None
 
-    tngDB, cursor = get_connection()
-    if not tngDB or not cursor:
+	try:
 
-        return None
+		# Retrieve the attendees of the event based on the event title
+		cursor.execute("SELECT attendees FROM events WHERE title = %s", (eventName,))
+		result = cursor.fetchone()
 
-    try:
+		if result:
 
-        # Retrieve the attendees of the event based on the event title
-        cursor.execute("SELECT attendees FROM events WHERE title = %s", (eventName,))
-        result = cursor.fetchone()
+			# Convert the comma-separated string of attendees into a list
+			attendees = result[0].split(",") if result[0] else []
+			return attendees
 
-        if result:
+		else:
 
-            # Convert the comma-separated string of attendees into a list
-            attendees = result[0].split(",") if result[0] else []
-            return attendees
+			print(f"No event found with title: {eventName}")
+			return None
 
-        else:
+	except pymysql.MySQLError as err:
 
-            print(f"No event found with title: {eventName}")
-            return None
+		print(f"Error: {err}")
+		return None
 
-    except pymysql.MySQLError as err:
+	finally:
 
-        print(f"Error: {err}")
-        return None
+		if cursor:
+			cursor.close()
 
-    finally:
-
-        if cursor:
-
-            cursor.close()
-
-        if tngDB:
-
-            tngDB.close()
+		if tngDB:
+			tngDB.close()
 
 # Print member database to command line
 def print_members():
+	tngDB, cursor = get_connection()
+	if not tngDB or not cursor:
+		return
 
-    tngDB, cursor = get_connection()
-    if not tngDB or not cursor:
+	try:
 
-        return
+		# Retrieve all members from the database
+		cursor.execute("SELECT * FROM members")
+		results = cursor.fetchall()
 
-    try:
+		if results:
 
-        # Retrieve all members from the database
-        cursor.execute("SELECT * FROM members")
-        results = cursor.fetchall()
+			# Get column headers
+			column_headers = [desc[0] for desc in cursor.description]
 
-        if results:
+			# Print column headers
+			print("\t".join(column_headers))
 
-            # Get column headers
-            column_headers = [desc[0] for desc in cursor.description]
+			# Print each member's data in a readable format
+			for row in results:
+				print("\t".join(str(value) for value in row))
 
-            # Print column headers
-            print("\t".join(column_headers))
+		else:
 
-            # Print each member's data in a readable format
-            for row in results:
+			print("No members found.")
+			column_headers = [desc[0] for desc in cursor.description]
+			print("\t".join(column_headers))
 
-                print("\t".join(str(value) for value in row))
+	except pymysql.MySQLError as err:
 
-        else:
+		print(f"Error: {err}")
 
-            print("No members found.")
-            column_headers = [desc[0] for desc in cursor.description]
-            print("\t".join(column_headers))
+	finally:
 
-    except pymysql.MySQLError as err:
+		if cursor:
+			cursor.close()
 
-        print(f"Error: {err}")
-
-    finally:
-
-        if cursor:
-
-            cursor.close()
-
-        if tngDB:
-
-            tngDB.close()
+		if tngDB:
+			tngDB.close()
 
 # Print event database to command line
 def print_events():
+	tngDB, cursor = get_connection()
+	if not tngDB or not cursor:
+		return
 
-    tngDB, cursor = get_connection()
-    if not tngDB or not cursor:
+	try:
 
-        return
+		# Retrieve all events from the database
+		cursor.execute("SELECT * FROM events")
+		results = cursor.fetchall()
 
-    try:
+		if results:
 
-        # Retrieve all events from the database
-        cursor.execute("SELECT * FROM events")
-        results = cursor.fetchall()
+			# Get column headers
+			column_headers = [desc[0] for desc in cursor.description]
 
-        if results:
+			# Print column headers
+			print("\t".join(column_headers))
 
-            # Get column headers
-            column_headers = [desc[0] for desc in cursor.description]
+			# Print each event's data in a readable format
+			for row in results:
+				print("\t".join(str(value) for value in row))
 
-            # Print column headers
-            print("\t".join(column_headers))
+		else:
 
-            # Print each event's data in a readable format
-            for row in results:
+			print("No events found.")
+			column_headers = [desc[0] for desc in cursor.description]
+			print("\t".join(column_headers))
 
-                print("\t".join(str(value) for value in row))
+	except pymysql.MySQLError as err:
 
-        else:
+		print(f"Error: {err}")
 
-            print("No events found.")
-            column_headers = [desc[0] for desc in cursor.description]
-            print("\t".join(column_headers))
+	finally:
 
-    except pymysql.MySQLError as err:
+		if cursor:
+			cursor.close()
 
-        print(f"Error: {err}")
-
-    finally:
-
-        if cursor:
-
-            cursor.close()
-
-        if tngDB:
-
-            tngDB.close()
+		if tngDB:
+			tngDB.close()
