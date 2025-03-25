@@ -15,8 +15,23 @@ class Member:
 		self.hours = hours
 		self.isTrained = isTrained
 
+	def __str__(self):
+
+		return str(self.__dict__)
+
 	@property
 	def isActive(self):
 
 		# IDK boss
 		pass
+
+	def edit_attr(self, attrName, newAttrVal):
+
+		objDict = self.__dict__
+		if attrName in objDict.keys():
+
+			objDict[attrName] = newAttrVal
+
+		else:
+
+			raise KeyError(f"Not a valid attribute of a member object (Valid attributes: {list(objDict.keys())})")
