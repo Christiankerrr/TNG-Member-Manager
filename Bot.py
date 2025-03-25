@@ -3,12 +3,12 @@ from discord.ext import commands, tasks
 class BotClient (commands.Bot):
 
 	@tasks.loop(hours = 24)
-	def update_member_db(self):
+	async def update_member_db(self):
 
 		pass
 
 	@tasks.loop(hours = 24)
-	def prune_events(self):
+	async def prune_events(self):
 
 		pass
 
@@ -19,6 +19,11 @@ class BotClient (commands.Bot):
 		self.strip_after_prefix = True
 
 		self.activeEvents = []
+		self.registrationInfo = {}
+
+	async def on_ready(self):
+
+		pass
 
 	# def command(self, *args, **kwargs):
 	#
