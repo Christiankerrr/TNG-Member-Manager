@@ -2,6 +2,8 @@
 # Adrian Fanjoy
 # Database management
 
+# HI AARON
+
 import pymysql
 
 # Temporary example code (REMOVE LATER)
