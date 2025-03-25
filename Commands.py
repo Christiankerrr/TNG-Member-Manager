@@ -23,6 +23,7 @@ async def member_status(ctx, arg1):
 @bot.command()
 async def write_member(ctx, arg1, arg2, arg3):
 
+	# make it take just the id -> use discord.py to get tag and name
 	ID = arg1
 	tag = arg2
 	name = arg3
