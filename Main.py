@@ -2,14 +2,13 @@
 # import pip
 #
 # pip.main(["install", "discord", "pymysql"])
-
+import os
 import time
 
 from Commands import bot
 from Event import start_event, end_event, start_meeting
 from Member import Member
 
-with open("Token.txt") as file:
+if __name__ == "__main__":
 
-	token = file.readline()
-	bot.run(token)
+	bot.run(os.getenv("TOKEN"))
