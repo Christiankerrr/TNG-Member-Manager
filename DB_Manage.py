@@ -665,86 +665,35 @@ def get_attendees(eventName):
 		if tngDB:
 			tngDB.close()
 
-# Print member database to command line
+# Get the member table as a string
+# OUTPUT: string with table
 def print_members():
-	tngDB, cursor = get_connection()
-	if not tngDB or not cursor:
-		return
+    tngDB, cursor = get_connection()
+    if not tngDB or not cursor:
+        return "Error: Unable to connect to the database."
 
-	try:
+    try:
+        # Retrieve all members from the database
+        cursor.execute("SELECT * FROM members")
+        results = cursor.fetchall()
 
-		# Retrieve all members from the database
-		cursor.execute("SELECT * FROM members")
-		results = cursor.fetchall()
+        if results:
+            # Get column headers
+            column_headers = [desc[0] for desc in cursor.description]
 
-		if results:
+            # Format the data as a string
+            output = ["\t".join(column_headers)]
+            output.extend("\t".join(str(value) for value in row) for row in results)
 
-			# Get column headers
-			column_headers = [desc[0] for desc in cursor.description]
+            return "\n".join(output)
+        else:
+            return "No members found."
 
-			# Print column headers
-			print("\t".join(column_headers))
+    except pymysql.MySQLError as err:
+        return f"Error: {err}"
 
-			# Print each member's data in a readable format
-			for row in results:
-				print("\t".join(str(value) for value in row))
-
-		else:
-
-			print("No members found.")
-			column_headers = [desc[0] for desc in cursor.description]
-			print("\t".join(column_headers))
-
-	except pymysql.MySQLError as err:
-
-		print(f"Error: {err}")
-
-	finally:
-
-		if cursor:
-			cursor.close()
-
-		if tngDB:
-			tngDB.close()
-
-# Print event database to command line
-def print_events():
-	tngDB, cursor = get_connection()
-	if not tngDB or not cursor:
-		return
-
-	try:
-
-		# Retrieve all events from the database
-		cursor.execute("SELECT * FROM events")
-		results = cursor.fetchall()
-
-		if results:
-
-			# Get column headers
-			column_headers = [desc[0] for desc in cursor.description]
-
-			# Print column headers
-			print("\t".join(column_headers))
-
-			# Print each event's data in a readable format
-			for row in results:
-				print("\t".join(str(value) for value in row))
-
-		else:
-
-			print("No events found.")
-			column_headers = [desc[0] for desc in cursor.description]
-			print("\t".join(column_headers))
-
-	except pymysql.MySQLError as err:
-
-		print(f"Error: {err}")
-
-	finally:
-
-		if cursor:
-			cursor.close()
-
-		if tngDB:
-			tngDB.close()
+    finally:
+        if cursor:
+            cursor.close()
+        if tngDB:
+            tngDB.close()
