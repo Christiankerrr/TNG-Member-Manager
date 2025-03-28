@@ -1,16 +1,43 @@
 import discord
 import pymysql
+import DB_Manage
+from Member import Member
 
 from Bot import BotClient
 
 bot = BotClient(command_prefix = "?", intents = discord.Intents.all())
 
+@bot.command()
+async def print_db(ctx):
+
+	await ctx.send(DB_Manage.print_members())
+	pass
+
+@bot.command()
+async def member_status(ctx, arg1):
+
+	ctx.author.ID = arg1
+	await ctx.send(DB_Manage.get_status(ctx.author.ID))
+	pass
+
+@bot.command()
+async def write_member(ctx, arg1, arg2, arg3):
+
+	# make it take just the id -> use discord.py to get tag and name
+	ID = arg1
+	tag = arg2
+	name = arg3
+
+	newMember = Member(ID, tag, name)
+	DB_Manage.write_member(newMember)
+
+	
 ##Edit User Data Command
 @bot.command()
-async def edit_data(context, arg1, arg2, arg3):
+async def edit_data(ctx, arg1, arg2, arg3):
 
-	memberID = arg1
-	infoType = arg2
+	memberTag = arg1
+	attrName = arg2
 	newData = arg3
 
 	#*#* Need to utilize the get_connection() function to establish connection to MySQL
@@ -48,7 +75,7 @@ async def edit_data(context, arg1, arg2, arg3):
 
 ##Start Event Command
 @bot.command()
-async def start_event(context, arg1):
+async def eventStart(context, arg1): ##Separate need names of special events
 
 	eventType = arg1
 
@@ -64,22 +91,22 @@ async def start_event(context, arg1):
 	# 	await context.send("Unknown event type, please enter another command or try again")
 	pass
 
-##End Event Command
-@bot.command()
-async def end_event(context, arg1):
+# ##End Event Command
+# @bot.command()
+# async def eventEnd(context, arg1):
 
-	eventType = arg1
+# 	eventType = arg1
 
-	#*#* Utilize the UI function *endEvent" to conclude a current event
-	#There SHOULD only be one event at a time so the function shouldn't need to take any arguments
+# 	#*#* Utilize the UI function *endEvent" to conclude a current event
+# 	#There SHOULD only be one event at a time so the function shouldn't need to take any arguments
 
-	#endEvent()
+# 	#endEvent()
 
-	pass
+# 	pass
 
 ##See Active Events
 @bot.command()
-async def active_events(context, *args):
+async def events_active(context, *args):
 
 	#*#* Utilize the function to display active events
 
