@@ -18,11 +18,11 @@ def get_connection():
 	try:
 
 		tngDB = pymysql.connect(
-				host = "localhost",
-				user = "root",
-				password = "se300",
-				database = "memberdb"
-				)
+			host = "localhost",
+			user = "root",
+			password = "se300",
+			database = "memberdb"
+		)
 
 		return tngDB, tngDB.cursor()
 
@@ -38,10 +38,10 @@ def create_database():
 
 		# Connect to MySQL server
 		tngDB = pymysql.connect(
-				host = "localhost",
-				user = "root",
-				password = "se300"
-				)
+			host = "localhost",
+			user = "root",
+			password = "se300"
+		)
 		cursor = tngDB.cursor()
 
 		# Check if database exists
