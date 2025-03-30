@@ -18,7 +18,7 @@ bot = BotClient(command_prefix = "?", intents = discord.Intents.all())
 	## end event/meeting --- U
 	## show profile --- U
 	## show leaderboard --- I
-	## manually edit data --- I
+	## manually edit data --- U
 
 
 ## Tested-Working Commands
