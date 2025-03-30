@@ -1,18 +1,52 @@
 import discord
 import pymysql
 import DB_Manage
-from Member import Member
 
+from Member import Member
+from discord.ext import commands
 from Bot import BotClient
 
 bot = BotClient(command_prefix = "?", intents = discord.Intents.all())
 
+## Command Key: -> C = Complete, U = Untested, I = Incomplete
+	## print database --- C
+	## write member to db --- C
+	## get member status --- U
+	## start event registration --- U
+	## start event (auto end registration) --- U
+	## start meeting --- U
+	## end event/meeting --- U
+	## show profile --- U
+	## show leaderboard --- I
+	## manually edit data --- I
+
+
+## Tested-Working Commands
+
+## Print Database
 @bot.command()
 async def print_db(ctx):
 
 	await ctx.send(DB_Manage.print_members())
 	pass
 
+
+## Write Member to Database
+@bot.command()
+async def write_member(ctx, arg1, arg2, arg3):
+
+	# make it take just the id -> use discord.py to get tag and name (?)
+	ID = arg1
+	attr = arg2
+	name = arg3
+
+	newMember = Member(ID, attr, name)
+	DB_Manage.write_member(newMember)
+
+
+## Untested Commands
+
+## Get Member Status
 @bot.command()
 async def member_status(ctx, arg1):
 
@@ -20,18 +54,67 @@ async def member_status(ctx, arg1):
 	await ctx.send(DB_Manage.get_status(ctx.author.ID))
 	pass
 
+## Start Event Registration 
 @bot.command()
-async def write_member(ctx, arg1, arg2, arg3):
+async def event_registration(ctx, arg1, arg2):
 
-	# make it take just the id -> use discord.py to get tag and name
-	ID = arg1
-	tag = arg2
-	name = arg3
+	eventName = arg1
+	eventDur = arg2
 
-	newMember = Member(ID, tag, name)
-	DB_Manage.write_member(newMember)
+	# Call UI function to display event registration info
+	ui_func_EventRegistrDisplay(eventName, eventDur)
+	pass
 
-##Edit User Data Command
+## Start Event
+@bot.command()
+async def startEvent(ctx, arg1):
+
+	eventName = arg1
+
+	# Call UI function to end event registration function
+	ui_func_EndRegistration()
+	await ctx.send("Event registration has ended, thank you for your responses!")
+	# Call UI function to start an event with the sign in/out buttons
+	ui_func_StartEvent(eventName)
+	await ctx.send(arg1 + " Event has begun! Have a great time everyone!")
+	pass
+
+## Start Meeting
+@bot.command()
+async def startMeeting(ctx, *args):
+
+	# Call UI function to start an event with the sign in/out buttons, doesn't need special name
+	ui_func_StartMeeting()
+	await ctx.send("Welcome to the meeting everyone! Please sign in at your earliest convenience.")
+	pass
+
+## End Event Command
+@bot.command()
+async def endEvent(ctx, *args):
+
+	# Call UI function to conclude event
+	ui_func_EndEvent()
+	await ctx.send("The current event has concluded.")
+	pass
+
+## Show Profile
+@bot.command()
+async def showProfile(ctx, arg1):
+
+	arg1 = await commands.MemberConverter().convert(ctx, arg1)
+
+	# Call UI function to display profile
+	ui_func_DisplayProfile(arg1.id)
+	pass
+
+## Show Leaderboard
+@bot.command()
+async def showLeaderboard(ctx, *args):
+
+	# yeahhhh not sure about this one lol
+	pass
+
+## Manually Chnage Data
 @bot.command()
 async def edit_data(ctx, arg1, arg2, arg3):
 
@@ -39,15 +122,12 @@ async def edit_data(ctx, arg1, arg2, arg3):
 	attrName = arg2
 	newData = arg3
 
-	#*#* Need to utilize the get_connection() function to establish connection to MySQL
-
-		# tngDB, cursor = get_connection()
-		# updateDatabase(memberID, infoType, newData)
-		# if updateDatabe = true:
-		# 	await context.send(memberID + "'s" + infoType + " is now set to " + newData)
-		# else:
-		# 	await context.send("Manual data change failed, please try again.")
-
+	await commands.MemberConverter().convert(ctx, memberTag)
+	# Call MySQL function to update the databse with given parameters
+	if updateDatabase(memberTag.id, attrName, newData) == True:
+		await ctx.send("Data successfully changed to " + newData)
+	else:
+		await ctx.send("Manual data change failed, please try again.")
 	pass
 
 ##Multi-argument Ping-Pong example w/ ChatGPT [Don't need, just to help visualize multiple arguments]
@@ -71,44 +151,3 @@ async def edit_data(ctx, arg1, arg2, arg3):
 #     # Send a response for each argument
 #     for arg in args:
 #         await send_pong(arg)
-
-##Start Event Command
-@bot.command()
-async def eventStart(context, arg1): ##Separate need names of special events
-
-	eventType = arg1
-
-	#*#* Utilize the UI function *startEvent" to start an event with the sign in/out buttons
-
-	# if eventType == "regular":
-	# 	startEvent(eventType)
-	# 	pass
-	# elif eventType == "special":
-	# 	startEvent(eventType)
-	# 	pass
-	# else:
-	# 	await context.send("Unknown event type, please enter another command or try again")
-	pass
-
-# ##End Event Command
-# @bot.command()
-# async def eventEnd(context, arg1):
-
-# 	eventType = arg1
-
-# 	#*#* Utilize the UI function *endEvent" to conclude a current event
-# 	#There SHOULD only be one event at a time so the function shouldn't need to take any arguments
-
-# 	#endEvent()
-
-# 	pass
-
-##See Active Events
-@bot.command()
-async def events_active(context, *args):
-
-	#*#* Utilize the function to display active events
-
-	#showEvents()?
-
-	pass
