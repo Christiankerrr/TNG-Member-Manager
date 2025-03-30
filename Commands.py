@@ -31,7 +31,6 @@ async def write_member(ctx, arg1, arg2, arg3):
 	newMember = Member(ID, tag, name)
 	DB_Manage.write_member(newMember)
 
-	
 ##Edit User Data Command
 @bot.command()
 async def edit_data(ctx, arg1, arg2, arg3):
