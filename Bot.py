@@ -25,7 +25,9 @@ class BotClient (commands.Bot):
 	@tasks.loop(hours = 24)
 	async def prune_events(self):
 
-		pass
+		for event in self.activeEvents:
+
+			pass
 
 	def __init__(self, *args, **kwargs):
 
