@@ -1,6 +1,6 @@
 from discord.ext import commands, tasks
 
-from DB_Manage import get_loop_vals, get_all_id, get_status, edit_attr
+from DB_Manage import get_total_hours, get_total_meetings, get_all_ids, get_attrs, edit_attr
 
 class BotClient (commands.Bot):
 
@@ -9,15 +9,16 @@ class BotClient (commands.Bot):
 
 		tngServer = self.get_guild(self.tngServerID)
 
-		totalEventHours, totalMeetings = get_loop_vals()
+		totalEventHours = get_total_hours()
+		totalMeetings = get_total_meetings()
 
-		for id in get_all_id():
+		for id in get_all_ids():
 
 			memberAttrs = get_status(id)
 
 			memberObj = tngServer.fetch_member(id)
-			edit_attr("tag", memberObj.name)
-			edit_attr("name", memberObj.nick)
+			edit_attr("members", id, "tag", memberObj.name)
+			edit_attr("members", id, "name", memberObj.nick)
 
 			isActive = (memberAttrs["hours"] >= totalEventHours/2) and (memberAttrs["meeting"] >= totalMeetings/2)
 			edit_attr("isActive", isActive)
