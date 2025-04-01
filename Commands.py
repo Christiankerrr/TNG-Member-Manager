@@ -2,54 +2,55 @@ import discord
 import pymysql
 import DB_Manage
 from Member import Member
+from UI import VerifyView, send_diet, send_shirt_size, finish_survey
 
 from Bot import BotClient
 
-bot = BotClient(command_prefix = "?", intents = discord.Intents.all())
+bot = BotClient(command_prefix="?", intents=discord.Intents.all())
 
 @bot.command()
 async def print_db(ctx):
 
-	await ctx.send(DB_Manage.print_members())
-	pass
+    await ctx.send(DB_Manage.print_members())
+    pass
 
 @bot.command()
 async def member_status(ctx, arg1):
 
-	ctx.author.ID = arg1
-	await ctx.send(DB_Manage.get_status(ctx.author.ID))
-	pass
+    ctx.author.ID = arg1
+    await ctx.send(DB_Manage.get_status(ctx.author.ID))
+    pass
 
 @bot.command()
 async def write_member(ctx, arg1, arg2, arg3):
 
-	# make it take just the id -> use discord.py to get tag and name
-	ID = arg1
-	tag = arg2
-	name = arg3
+    # make it take just the id -> use discord.py to get tag and name
+    ID = arg1
+    tag = arg2
+    name = arg3
 
-	newMember = Member(ID, tag, name)
-	DB_Manage.write_member(newMember)
+    newMember = Member(ID, tag, name)
+    DB_Manage.write_member(newMember)
 
-	
+
 ##Edit User Data Command
 @bot.command()
 async def edit_data(ctx, arg1, arg2, arg3):
 
-	memberTag = arg1
-	attrName = arg2
-	newData = arg3
+    memberTag = arg1
+    attrName = arg2
+    newData = arg3
 
-	#*#* Need to utilize the get_connection() function to establish connection to MySQL
+    #*#* Need to utilize the get_connection() function to establish connection to MySQL
 
-		# tngDB, cursor = get_connection()
-		# updateDatabase(memberID, infoType, newData)
-		# if updateDatabe = true:
-		# 	await context.send(memberID + "'s" + infoType + " is now set to " + newData)
-		# else:
-		# 	await context.send("Manual data change failed, please try again.")
+        # tngDB, cursor = get_connection()
+        # updateDatabase(memberID, infoType, newData)
+        # if updateDatabe = true:
+        # 	await context.send(memberID + "'s" + infoType + " is now set to " + newData)
+        # else:
+        # 	await context.send("Manual data change failed, please try again.")
 
-	pass
+    pass
 
 ##Multi-argument Ping-Pong example w/ ChatGPT [Don't need, just to help visualize multiple arguments]
 # @bot.command()
@@ -77,19 +78,19 @@ async def edit_data(ctx, arg1, arg2, arg3):
 @bot.command()
 async def eventStart(context, arg1): ##Separate need names of special events
 
-	eventType = arg1
+    eventType = arg1
 
-	#*#* Utilize the UI function *startEvent" to start an event with the sign in/out buttons
+    #*#* Utilize the UI function *startEvent" to start an event with the sign in/out buttons
 
-	# if eventType == "regular":
-	# 	startEvent(eventType)
-	# 	pass
-	# elif eventType == "special":
-	# 	startEvent(eventType)
-	# 	pass
-	# else:
-	# 	await context.send("Unknown event type, please enter another command or try again")
-	pass
+    # if eventType == "regular":
+    # 	startEvent(eventType)
+    # 	pass
+    # elif eventType == "special":
+    # 	startEvent(eventType)
+    # 	pass
+    # else:
+    # 	await context.send("Unknown event type, please enter another command or try again")
+    pass
 
 # ##End Event Command
 # @bot.command()
@@ -108,8 +109,38 @@ async def eventStart(context, arg1): ##Separate need names of special events
 @bot.command()
 async def events_active(context, *args):
 
-	#*#* Utilize the function to display active events
+    #*#* Utilize the function to display active events
 
-	#showEvents()?
+    #showEvents()?
 
-	pass
+    pass
+
+@bot.command()
+async def surveyverify(ctx):
+    embed = discord.Embed(
+        title="Welcome to the TNG Discord",
+        description="Click the button below to provide information for all TNG Events.",
+        color=discord.Color.blue()
+    )
+    await ctx.send(embed=embed, view=VerifyView())
+
+@bot.command()
+async def register(ctx):
+
+    embed = discord.Embed(
+        title="Registration For 'Add Variable for events here'",
+        color=discord.Color.blue()
+    )
+    embed.add_field(name="**Meeting Area**", value="Blank", inline=False)
+    embed.add_field(name="**Need help?**", value="[Message Blank](https://google.com)", inline=False)
+
+    view = discord.ui.View()
+    sign_in = discord.ui.Button(label="Sign in", style=discord.ButtonStyle.link, url="https://google.com")
+    sign_out = discord.ui.Button(label="Sign Out", style=discord.ButtonStyle.link,
+                                       url="https://google.com")
+
+    view.add_item(sign_in)
+    view.add_item(sign_out)
+
+    await ctx.send(embed=embed, view=view)
+
