@@ -19,6 +19,7 @@ bot = BotClient(command_prefix = "?", intents = discord.Intents.all())
 	## show profile --- U
 	## show leaderboard --- I
 	## manually edit data --- U
+	## display all commands --- I
 
 
 ## Tested-Working Commands
@@ -33,14 +34,11 @@ async def print_db(ctx):
 
 ## Write Member to Database
 @bot.command()
-async def write_member(ctx, arg1, arg2, arg3):
+async def write_member(ctx, id, attr, name):
 
 	# make it take just the id -> use discord.py to get tag and name (?)
-	ID = arg1
-	attr = arg2
-	name = arg3
 
-	newMember = Member(ID, attr, name)
+	newMember = Member(id, attr, name)
 	DB_Manage.write_member(newMember)
 
 
@@ -48,18 +46,15 @@ async def write_member(ctx, arg1, arg2, arg3):
 
 ## Get Member Status
 @bot.command()
-async def member_status(ctx, arg1):
+async def member_status(ctx, tag):
 
-	ctx.author.ID = arg1
-	await ctx.send(DB_Manage.get_status(ctx.author.ID))
+	tag = ctx.author.ID
+	await ctx.send(DB_Manage.get_status(tag))
 	pass
 
 ## Start Event Registration 
 @bot.command()
-async def event_registration(ctx, arg1, arg2):
-
-	eventName = arg1
-	eventDur = arg2
+async def event_registration(ctx, eventName, eventDur):
 
 	# Call UI function to display event registration info
 	ui_func_EventRegistrDisplay(eventName, eventDur)
@@ -67,21 +62,19 @@ async def event_registration(ctx, arg1, arg2):
 
 ## Start Event
 @bot.command()
-async def startEvent(ctx, arg1):
-
-	eventName = arg1
+async def start_event(ctx, eventName):
 
 	# Call UI function to end event registration function
 	ui_func_EndRegistration()
 	await ctx.send("Event registration has ended, thank you for your responses!")
 	# Call UI function to start an event with the sign in/out buttons
 	ui_func_StartEvent(eventName)
-	await ctx.send(arg1 + " Event has begun! Have a great time everyone!")
+	await ctx.send(eventName + " Event has begun! Have a great time everyone!")
 	pass
 
 ## Start Meeting
 @bot.command()
-async def startMeeting(ctx, *args):
+async def start_meeting(ctx, *args):
 
 	# Call UI function to start an event with the sign in/out buttons, doesn't need special name
 	ui_func_StartMeeting()
@@ -90,7 +83,7 @@ async def startMeeting(ctx, *args):
 
 ## End Event Command
 @bot.command()
-async def endEvent(ctx, *args):
+async def end_event(ctx, *args):
 
 	# Call UI function to conclude event
 	ui_func_EndEvent()
@@ -99,7 +92,7 @@ async def endEvent(ctx, *args):
 
 ## Show Profile
 @bot.command()
-async def showProfile(ctx, arg1):
+async def show_profile(ctx, arg1):
 
 	arg1 = await commands.MemberConverter().convert(ctx, arg1)
 
@@ -109,18 +102,14 @@ async def showProfile(ctx, arg1):
 
 ## Show Leaderboard
 @bot.command()
-async def showLeaderboard(ctx, *args):
+async def show_leaderboard(ctx, *args):
 
 	# yeahhhh not sure about this one lol
 	pass
 
 ## Manually Chnage Data
 @bot.command()
-async def edit_data(ctx, arg1, arg2, arg3):
-
-	memberTag = arg1
-	attrName = arg2
-	newData = arg3
+async def edit_data(ctx, memberTag, attrName, newData):
 
 	await commands.MemberConverter().convert(ctx, memberTag)
 	# Call MySQL function to update the databse with given parameters
@@ -129,6 +118,13 @@ async def edit_data(ctx, arg1, arg2, arg3):
 	else:
 		await ctx.send("Manual data change failed, please try again.")
 	pass
+
+## Display All Commands
+@bot.command()
+async def help(ctx):
+	
+	# find a way to itemize and display commands...?
+	# I don't think i can call a command ti just display it. this seems common enough that I could youtube it though
 
 ##Multi-argument Ping-Pong example w/ ChatGPT [Don't need, just to help visualize multiple arguments]
 # @bot.command()
