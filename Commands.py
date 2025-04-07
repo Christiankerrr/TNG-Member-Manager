@@ -22,7 +22,8 @@ bot = BotClient(command_prefix = "?", intents = discord.Intents.all())
 	## display all commands --- I
 	## edit event - by event name
 	## edit meeting (perform any logic necessary: start time, end time)
-	## delete member/delete event - by event/member name
+	## delete member/delete event - by event/member name\
+	## extra dm to admin to verify sign in?
 
 	## before invoke:
 		## add unrecognized members to database - identify tag and recognize
