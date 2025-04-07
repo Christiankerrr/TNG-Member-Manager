@@ -7,32 +7,6 @@ import pymysql
 # Establish connection
 # OUTPUT: database and cursor
 def get_connection():
-    try:
-        tngDB = pymysql.connect(
-            host="localhost",
-            user="root",
-            password="se300",
-            database="memberdb"
-        )
-        return tngDB, tngDB.cursor()
-    except pymysql.MySQLError as err:
-        return None, None
-
-# Create new database
-def create_database():
-    try:
-        tngDB = pymysql.connect(
-            host="localhost",
-            user="root",
-            password="se300"
-        )
-        cursor = tngDB.cursor()
-        cursor.execute("SHOW DATABASES")
-        databases = [db[0].lower() for db in cursor.fetchall()]
-        if "memberdb" not in databases:
-            cursor.execute("CREATE DATABASE memberdb")
-        cursor.execute("USE memberdb")
-        cursor.execute("""
             CREATE TABLE IF NOT EXISTS members (
                 id VARCHAR(50) PRIMARY KEY,
                 tag VARCHAR(100),
@@ -178,78 +152,7 @@ def get_status(memberID):
 # INPUT: event name
 # OUTPUT: event attendees
 def get_attendees(eventName):
-    tngDB, cursor = get_connection()
-    if not tngDB or not cursor:
-        return "Error: Unable to connect to the database."
-    try:
-        cursor.execute("SELECT attendees FROM events WHERE title = %s", (eventName,))
-        result = cursor.fetchone()
-        if result:
-            attendees = result[0].split(",") if result[0] else []
-            return ", ".join(attendees) if attendees else "No attendees found."
-        else:
-            return f"Error: No event found with title '{eventName}'."
-    except pymysql.MySQLError as err:
-        return f"Error: {err}"
-    finally:
-        cursor.close()
-        tngDB.close()
-
-# Get all ids in the database
-# OUTPUT: list of all ids as integers
-def get_all_id():
-    tngDB, cursor = get_connection()
-    if not tngDB or not cursor:
-        return "Database connection error."
-    try:
-        cursor.execute("SELECT id FROM members")
-        return [row[0] for row in cursor.fetchall()]
-    except pymysql.MySQLError as err:
-        return f"Error: {err}"
-    finally:
-        cursor.close()
-        tngDB.close()
-
-# Get attributes for task loop update
-# OUTPUT: total number of meetings, total event hours, all member ID's, amount of hours, amount of meetings
-def get_loop_vals():
-    tngDB, cursor = get_connection()
-    if not tngDB or not cursor:
-        return "Database connection error."
-    try:
-        cursor.execute("SELECT COUNT(*) FROM events")
-        total_events = cursor.fetchone()[0]
-
-        cursor.execute("SELECT SUM(duration) FROM events")
-        total_duration = cursor.fetchone()[0] or 0
-
-        cursor.execute("SELECT id, hours, meetings FROM members")
-        member_data = {row[0]: {"hours": row[1], "meetings": row[2]} for row in cursor.fetchall()}
-
-        return total_events, total_duration, member_data
-    except pymysql.MySQLError as err:
-        return f"Error: {err}"
-    finally:
-        cursor.close()
-        tngDB.close()
-
-# Get the member table as a string MAKE ONE FUNCTION AND ATTRIBUTE TO SELECT WHICH TABLE
 # OUTPUT: string with table
 def print_members():
     tngDB, cursor = get_connection()
     if not tngDB or not cursor:
-        return "Database connection error."
-    try:
-        cursor.execute("SELECT * FROM members")
-        results = cursor.fetchall()
-        if results:
-            column_headers = [desc[0] for desc in cursor.description]
-            output = ["\t".join(column_headers)]
-            output.extend("\t".join(str(value) for value in row) for row in results)
-            return "\n".join(output)
-        return "No members found."
-    except pymysql.MySQLError as err:
-        return f"Error: {err}"
-    finally:
-        cursor.close()
-        tngDB.close()
