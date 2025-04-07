@@ -5,6 +5,8 @@ import DB_Manage
 from Member import Member
 from discord.ext import commands
 from Bot import BotClient
+from UI import VerifyView, send_diet, send_shirt_size, finish_survey
+
 
 bot = BotClient(command_prefix = "?", intents = discord.Intents.all())
 
@@ -140,3 +142,32 @@ async def help(ctx):
 	# find a way to itemize and display commands...?
 	# I don't think i can call a command ti just display it. this seems common enough that I could youtube it though
 	pass
+
+@bot.command()
+async def surveyverify(ctx):
+    embed = discord.Embed(
+        title="Welcome to the TNG Discord",
+        description="Click the button below to provide information for all TNG Events.",
+        color=discord.Color.blue()
+    )
+    await ctx.send(embed=embed, view=VerifyView())
+
+@bot.command()
+async def register(ctx):
+
+    embed = discord.Embed(
+        title="Registration For 'Add Variable for events here'",
+        color=discord.Color.blue()
+    )
+    embed.add_field(name="**Meeting Area**", value="Blank", inline=False)
+    embed.add_field(name="**Need help?**", value="[Message Blank](https://google.com)", inline=False)
+
+    view = discord.ui.View()
+    sign_in = discord.ui.Button(label="Sign in", style=discord.ButtonStyle.link, url="https://google.com")
+    sign_out = discord.ui.Button(label="Sign Out", style=discord.ButtonStyle.link,
+                                       url="https://google.com")
+
+    view.add_item(sign_in)
+    view.add_item(sign_out)
+
+    await ctx.send(embed=embed, view=view)
