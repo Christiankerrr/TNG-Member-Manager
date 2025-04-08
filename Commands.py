@@ -5,7 +5,7 @@ import DB_Manage
 from Member import Member
 from discord.ext import commands
 from Bot import BotClient
-from UI import VerifyView, send_diet, send_shirt_size, finish_survey
+# from UI import VerifyView, send_diet, send_shirt_size, finish_survey
 
 
 bot = BotClient(command_prefix = "?", intents = discord.Intents.all())
@@ -22,9 +22,10 @@ bot = BotClient(command_prefix = "?", intents = discord.Intents.all())
 	## show leaderboard --- I
 	## manually edit data --- U
 	## display all commands --- I
-	## edit event - by event name
-	## edit meeting (perform any logic necessary: start time, end time)
-	## delete member/delete event - by event/member name\
+	## edit event - by event name --- U
+	## edit meeting (perform any logic necessary: start time, end time) --- U
+	## delete member --- U
+	## delete event --- U
 	## extra dm to admin to verify sign in?
 
 	## before invoke:
@@ -39,8 +40,6 @@ bot = BotClient(command_prefix = "?", intents = discord.Intents.all())
 async def print_db(ctx):
 
 	await ctx.send(DB_Manage.print_members())
-	pass
-
 
 ## Write Member to Database
 @bot.command()
@@ -51,7 +50,6 @@ async def write_member(ctx, id, attr, name):
 	newMember = Member(id, attr, name)
 	DB_Manage.write_member(newMember)
 
-
 ## Untested Commands
 
 ## Get Member Status
@@ -60,7 +58,6 @@ async def member_status(ctx, tag):
 
 	tag = ctx.author.ID
 	await ctx.send(DB_Manage.get_status(tag))
-	pass
 
 ## Start Event Registration 
 @bot.command()
@@ -70,20 +67,17 @@ async def event_registration(ctx, eventName, eventDur):
 
 	# Call UI function to display event registration info
 	ui_func_EventRegistrDisplay(eventName, eventDur)
-	pass
 
 ## Start Event
 @bot.command()
 async def start_event(ctx, eventName):
 
-	# 
 	# Call UI function to end event registration function
 	ui_func_EndRegistration()
 	await ctx.send("Event registration has ended, thank you for your responses!")
 	# Call UI function to start an event with the sign in/out buttons
 	ui_func_StartEvent(eventName)
 	await ctx.send(eventName + " Event has begun! Have a great time everyone!")
-	pass
 
 ## Start Meeting
 @bot.command()
@@ -95,7 +89,6 @@ async def start_meeting(ctx, *args):
 	# Call UI function to start an event with the sign in/out buttons, doesn't need special name
 	ui_func_StartMeeting()
 	await ctx.send("Welcome to the meeting everyone! Please sign in at your earliest convenience.")
-	pass
 
 ## End Event Command
 @bot.command()
@@ -104,17 +97,74 @@ async def end_event(ctx, *args):
 	# Call UI function to conclude event
 	ui_func_EndEvent()
 	await ctx.send("The current event has concluded.")
-	pass
 
 ## Show Profile
 @bot.command()
-async def show_profile(ctx, arg1):
+async def show_profile(ctx, memberTag):
 
-	arg1 = await commands.MemberConverter().convert(ctx, arg1)
+	memberID = await commands.MemberConverter().convert(ctx, memberTag)
 
 	# Call UI function to display profile
 	ui_func_DisplayProfile(arg1.id)
+
+## Manually Chnage Data
+@bot.command()
+async def edit_data(ctx, memberTag, attrName, newData):
+
+	memberID = await commands.MemberConverter().convert(ctx, memberTag)
+	# Call MySQL function to update member databse with given parameters
+	if updateMember(memberTag.id, attrName, newData) == True:
+		await ctx.send("Data successfully changed to " + newData)
+	else:
+		await ctx.send("Manual data change failed, please try again.")
+
+## Edit Event
+@bot.command()
+async def edit_event(ctx, eventName, attrName, newData):
+
+	if eventName == "Meeting":
+		# Assumption that the only thing that could change in meeting is the time?
+		# startTime = newData
+		endTime = 60 + newData
+		updateEvent(eventName, attrName, newData)
+		updateEvent(eventName, endTimeAttributeName, endTime)	
+
+		# Call MySQL function to update event database
+		if updateEvent(eventName, attrName, newData) == True:
+			await ctx.send("Event data successfully changed")
+		else:
+			await ctx.send("Data change failed, please try again.")
+	else:
+		# Call MySQL function to update event database
+		if updateEvent(eventName, attrName, newData) == True:
+			await ctx.send("Event data successfully changed")
+		else:
+			await ctx.send("Data change failed, please try again.")
+
+## Delete Member
+@bot.command()
+async def delete_member(ctx, memberTag):
+
+	memberID = await commands.MemberConverter().convert(ctx, memberTag)
+
+	# Call MySQL function to delete member
+	remove_member(memberID)
+
+## Delete Event
+@bot.command()
+async def delete_event(ctx, eventName):
+
+	# Call MySQL function to delete event
+	remove_event(eventName)
+
+
+## Display All Commands
+@bot.command()
+async def help(ctx):
+	
+	# pre-existing help command? Involves cogs?
 	pass
+
 
 ## Show Leaderboard
 @bot.command()
@@ -123,26 +173,8 @@ async def show_leaderboard(ctx, *args):
 	# yeahhhh not sure about this one lol
 	pass
 
-## Manually Chnage Data
-@bot.command()
-async def edit_data(ctx, memberTag, attrName, newData):
 
-	await commands.MemberConverter().convert(ctx, memberTag)
-	# Call MySQL function to update the databse with given parameters
-	if updateDatabase(memberTag.id, attrName, newData) == True:
-		await ctx.send("Data successfully changed to " + newData)
-	else:
-		await ctx.send("Manual data change failed, please try again.")
-	pass
-
-## Display All Commands
-@bot.command()
-async def help(ctx):
-	
-	# find a way to itemize and display commands...?
-	# I don't think i can call a command ti just display it. this seems common enough that I could youtube it though
-	pass
-
+## Christian's Code
 @bot.command()
 async def surveyverify(ctx):
     embed = discord.Embed(
@@ -151,6 +183,7 @@ async def surveyverify(ctx):
         color=discord.Color.blue()
     )
     await ctx.send(embed=embed, view=VerifyView())
+
 
 @bot.command()
 async def register(ctx):
