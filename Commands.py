@@ -164,8 +164,7 @@ async def register(ctx):
 
     view = discord.ui.View()
     sign_in = discord.ui.Button(label="Sign in", style=discord.ButtonStyle.link, url="https://google.com")
-    sign_out = discord.ui.Button(label="Sign Out", style=discord.ButtonStyle.link,
-                                       url="https://google.com")
+    sign_out = discord.ui.Button(label="Sign Out", style=discord.ButtonStyle.link, url="https://google.com")
 
     view.add_item(sign_in)
     view.add_item(sign_out)
