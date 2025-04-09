@@ -58,6 +58,7 @@ class BotClient (commands.Bot):
 		super().__init__(*args, **kwargs)
 
 		self.strip_after_prefix = True
+		# self.help_command = None
 
 		self.tngServerID = 1014692801281273868
 

@@ -12,7 +12,7 @@ def get_connection():
         tngDB = pymysql.connect(
             host="localhost",
             user="root",
-            password="se300",
+            password="data1013$",
             database="memberdb"
         )
         return tngDB, tngDB.cursor()
@@ -25,7 +25,7 @@ def create_database():
         tngDB = pymysql.connect(
             host="localhost",
             user="root",
-            password="se300"
+            password="data1013$"
         )
         cursor = tngDB.cursor()
         cursor.execute("SHOW DATABASES")
