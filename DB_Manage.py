@@ -12,7 +12,7 @@ def get_connection():
         tngDB = pymysql.connect(
             host="localhost",
             user="root",
-            password="se300",
+            password="data1013$",
             database="memberdb"
         )
         return tngDB, tngDB.cursor()
@@ -25,7 +25,7 @@ def create_database():
         tngDB = pymysql.connect(
             host="localhost",
             user="root",
-            password="se300"
+            password="data1013$"
         )
         cursor = tngDB.cursor()
         cursor.execute("SHOW DATABASES")
@@ -37,7 +37,7 @@ def create_database():
             CREATE TABLE IF NOT EXISTS members (
                 id VARCHAR(50) PRIMARY KEY,
                 tag VARCHAR(100),
-                nme VARCHAR(255),
+                name VARCHAR(255),
                 diet TEXT,
                 sze VARCHAR(50),
                 cut VARCHAR(50),
@@ -66,19 +66,41 @@ def create_database():
 
 # Add a member
 # INPUT: id, tag, name, other values can be defaults
-def write_member(member_id, tag, name, diet=None, size=None, cut=None, position="Member", points_spent=0, coupons=0, meetings=0, hours=0, is_trained=False):
+def write_member(memberID, newTag, name, diet=None, size=None, cut=None,
+                 position="Member", points_spent=0, coupons=0,
+                 meetings=0, hours=0, is_trained=False):
     tngDB, cursor = get_connection()
     if not tngDB or not cursor:
         return "Database connection error."
     try:
-        cursor.execute("SELECT COUNT(*) FROM members WHERE id = %s OR tag = %s", (member_id, tag))
+        memberID = str(memberID)
+        newTag = str(newTag)
+        name = str(name)
+        diet = str(diet) if diet is not None else None
+        size = str(size) if size is not None else None
+        cut = str(cut) if cut is not None else None
+        position = str(position)
+        points_spent = str(points_spent)
+        coupons = str(coupons)
+        meetings = str(meetings)
+        hours = str(hours)
+        is_trained = "1" if is_trained else "0"
+        cursor.execute(
+            "SELECT COUNT(*) FROM members WHERE id = %s OR tag = %s",
+            (memberID, newTag)
+        )
         if cursor.fetchone()[0] > 0:
-            return f"Member with ID {member_id} or Tag {tag} already exists."
+            return f"Member with ID {memberID} or Tag {newTag} already exists."
         query = """
-            INSERT INTO members (id, tag, nme, diet, sze, cut, pos, points_spent, coupons, meetings, hours, is_active, is_trained) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 1, %s)
+            INSERT INTO members (
+                id, tag, nme, diet, sze, cut, pos, points_spent,
+                coupons, meetings, hours, is_active, is_trained
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 1, %s)
         """
-        values = (member_id, tag, name, diet, size, cut, position, points_spent, coupons, meetings, hours, is_trained)
+        values = (
+            memberID, newTag, name, diet, size, cut, position,
+            points_spent, coupons, meetings, hours, is_trained
+        )
         cursor.execute(query, values)
         tngDB.commit()
         return "Member added successfully."
@@ -95,6 +117,13 @@ def write_event(title, start, end, duration=0, attendees="", isMeeting=1):
     if not tngDB or not cursor:
         return "Database connection error."
     try:
+        title = str(title)
+        start = str(start)
+        end = str(end)
+        duration = str(duration)
+        attendees = str(attendees)
+        isMeeting = str(isMeeting)
+
         query = """
             INSERT INTO events (title, start, end, duration, attendees, isMeeting) 
             VALUES (%s, %s, %s, %s, %s, %s)
@@ -148,13 +177,19 @@ def edit_attr(mode, recordIdentifier, attrName, newAttrVal):
     if not tngDB or not cursor:
         return "Database connection error."
     try:
-        table = "members" if mode == "member" else "events"
+        mode = str(mode)
+        recordIdentifier = str(recordIdentifier)
+        attrName = str(attrName)
+        newAttrVal = str(newAttrVal)
         id_column = "id" if mode == "member" else "title"
-        cursor.execute(f"DESCRIBE {table}")
+        cursor.execute(f"DESCRIBE {mode}")
         columns = [row[0] for row in cursor.fetchall()]
         if attrName not in columns:
             return f"Invalid attribute. Available attributes: {', '.join(columns)}"
-        cursor.execute(f"UPDATE {table} SET {attrName} = %s WHERE {id_column} = %s", (newAttrVal, recordIdentifier))
+        cursor.execute(
+            f"UPDATE {mode} SET {attrName} = %s WHERE {id_column} = %s",
+            (newAttrVal, recordIdentifier)
+        )
         tngDB.commit()
         return "Attribute updated successfully." if cursor.rowcount > 0 else "No record found with the given identifier."
     except pymysql.MySQLError as err:
@@ -269,15 +304,14 @@ def get_event_names():
 def print_table(mode):
     tngDB, cursor = get_connection()
     try:
-        table = "members" if mode == "member" else "events"
-        cursor.execute(f"SELECT * FROM {table}")
+        cursor.execute(f"SELECT * FROM {mode}")
         results = cursor.fetchall()
         if results:
             column_headers = [desc[0] for desc in cursor.description]
             output = ["\t".join(column_headers)]
             output.extend("\t".join(str(value) for value in row) for row in results)
             return "\n".join(output)
-        return f"No records found in {table}."
+        return f"No records found in {mode}."
     except pymysql.MySQLError as err:
         return f"Error: {err}"
     finally:
@@ -287,7 +321,7 @@ def print_table(mode):
 # Determine if an event can be signed in to
 # INPUT: name of the event
 # OUTPUT: boolean
-def can_signin(eventName):
+def can_sign_in(eventName):
     tngDB, cursor = get_connection()
     if not tngDB or not cursor:
         return False

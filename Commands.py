@@ -34,24 +34,29 @@ bot = BotClient(command_prefix = "?", intents = discord.Intents.all())
 ## Before Invoke
 # Meant to add anyone not currently in the DB to the DB
 # Additionally check permissions??
-@bot.check
-async def before_command(context):
-
-	await bot.wait_until_ready()
-	if DB_Manage.locate_member(context.author.id) == False:
-		DB_Manage.write_member(context.author.id, context.author)
-
-	# if not isinstance(bot.userDB[context.author.id], context.command.permissions):
-    #     await context.send(f"Sorry, you don't have the valid permissions to run that command. This command can only be run by Bot {context.command.permissions.ranking}s and above.")
+# @bot.before_invoke
+# async def before_command(context):
+#
+# 	await bot.wait_until_ready()
+# 	if DB_Manage.locate_member(context.author.id) == False:
+# 		DB_Manage.write_member(context.author.id, context.author)
+#
+# 	# if not isinstance(bot.userDB[context.author.id], context.command.permissions):
+#     #     await context.send(f"Sorry, you don't have the valid permissions to run that command. This command can only be run by Bot {context.command.permissions.ranking}s and above.")
 
 
 ## Tested-Working Commands
 
 ## Print Database
 @bot.command()
-async def print_db(ctx):
+async def show_members(ctx):
 
-	await ctx.send(DB_Manage.print_members())
+	await ctx.send(DB_Manage.print_table("members"))
+
+@bot.command()
+async def show_events(ctx):
+
+	await ctx.send(DB_Manage.print_table("events"))
 
 ## Write Member to Database
 @bot.command()
@@ -97,14 +102,14 @@ async def event_registration(ctx):
 @bot.command()
 async def start_event(ctx, eventName, startTime, endTime):
 
-	DB_Manage.write_event(eventName, startTime, endTime)
+	print(DB_Manage.write_event(eventName, startTime, endTime))
 
-	# Call UI function to end event registration function
-	ui_func_EndRegistration()
-	await ctx.send("Event registration has ended, thank you for your responses!")
-	# Call UI function to start an event with the sign in/out buttons
-	ui_func_StartEvent(eventName)
-	await ctx.send(eventName + " Event has begun! Have a great time everyone!")
+	# # Call UI function to end event registration function
+	# ui_func_EndRegistration()
+	# await ctx.send("Event registration has ended, thank you for your responses!")
+	# # Call UI function to start an event with the sign in/out buttons
+	# ui_func_StartEvent(eventName)
+	# await ctx.send(eventName + " Event has begun! Have a great time everyone!")
 
 ## Start Meeting
 @bot.command()
@@ -190,11 +195,11 @@ async def delete_event(ctx, eventName):
 
 
 ## Display All Commands
-@bot.command()
-async def help(ctx):
-	
-	# pre-existing help command? Involves cogs?
-	pass
+# @bot.command()
+# async def help(ctx):
+#
+# 	# pre-existing help command? Involves cogs?
+# 	pass
 
 
 ## Show Leaderboard

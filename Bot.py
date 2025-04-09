@@ -43,6 +43,13 @@ class BotClient (commands.Bot):
 			edit_attr("members", discordID, "isActive", isActive)
 
 	@tasks.loop(hours = 24)
+	async def update_event_db(self):
+
+		# Update duration
+		# put prune events here
+		pass
+
+	@tasks.loop(hours = 24)
 	async def prune_events(self):
 
 		for eventName in get_event_names():
