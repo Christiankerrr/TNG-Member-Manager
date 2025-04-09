@@ -1,3 +1,5 @@
+# I CHANGED THIS FILE
+
 class Member:
 
 	def __init__(self, discordID, discordTag, name, diet = None, size = None, cut = None, position = "Member", pointsSpent = 0, coupons = 0, meetings = 0, hours = 0, isTrained = False):
