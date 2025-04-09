@@ -1,11 +1,11 @@
 import discord
-import pymysql
-import DB_Manage
-
-from Member import Member
 from discord.ext import commands
+import pymysql
+
 from Bot import BotClient
-from UI import VerifyView, send_diet, send_shirt_size, finish_survey
+import DB_Manage
+from Member import Member
+# from UI import VerifyView, send_diet, send_shirt_size, finish_survey
 
 
 bot = BotClient(command_prefix = "?", intents = discord.Intents.all())
@@ -136,12 +136,12 @@ async def edit_data(ctx, memberTag, attrName, newData):
 	pass
 
 ## Display All Commands
-@bot.command()
-async def help(ctx):
-	
-	# find a way to itemize and display commands...?
-	# I don't think i can call a command ti just display it. this seems common enough that I could youtube it though
-	pass
+# @bot.command()
+# async def help(ctx):
+#
+# 	# find a way to itemize and display commands...?
+# 	# I don't think i can call a command ti just display it. this seems common enough that I could youtube it though
+# 	pass
 
 @bot.command()
 async def surveyverify(ctx):
