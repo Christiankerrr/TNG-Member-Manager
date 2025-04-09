@@ -21,6 +21,24 @@ class BotClient (commands.Bot):
 			edit_attr("members", discordID, "tag", memberObj.name)
 			edit_attr("members", discordID, "name", memberObj.nick)
 
+			memberRoleNames = [role.name for role in memberObj.roles]
+
+			if "Executive Board" in memberRoleNames:
+
+				if memberAttrs["hours"] < totalEventHours:
+
+					edit_attr("members", discordID, "hours", totalEventHours)
+
+				if memberAttrs["meetings"] < totalMeetings:
+
+					edit_attr("members", discordID, "meetings", totalMeetings)
+
+			elif "Paid Staff" in memberRoleNames:
+
+				if memberAttrs["hours"] < totalEventHours:
+
+					edit_attr("members", discordID, "hours", totalEventHours)
+
 			isActive = (float(memberAttrs["hours"]) >= totalEventHours/2) and (float(memberAttrs["meetings"]) >= totalMeetings/2)
 			edit_attr("members", discordID, "isActive", isActive)
 
