@@ -76,6 +76,7 @@ async def event_registration(ctx):
 
 	# need to add functionality where register button collects id
 	# and send to DB?
+	
 	embed = discord.Embed(
         title="Registration For 'Add Variable for events here'",
         color=discord.Color.blue()
