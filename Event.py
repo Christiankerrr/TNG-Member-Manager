@@ -1,5 +1,3 @@
-# I CHANGED THIS FILE
-
 import math
 import time
 

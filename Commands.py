@@ -1,5 +1,3 @@
-# I CHANGED THIS FILE
-
 import discord
 from discord.ext import commands
 import pymysql

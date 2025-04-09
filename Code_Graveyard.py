@@ -1,5 +1,3 @@
-# I CHANGED THIS FILE
-
 # Touch-N-Go Member Manager
 # Adrian Fanjoy
 # Code graveyards
