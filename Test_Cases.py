@@ -8,8 +8,6 @@ import DB_Manage
 def TNG_0():
     DB_Manage.create_database()
 
-# Run TNG_1
-
 # Menu
 choice = input("Choose from the following options:")
 print("0. Create database")

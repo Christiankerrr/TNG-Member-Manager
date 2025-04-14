@@ -351,3 +351,30 @@ def update_hours(memberID, newHours):
 
 		if tngDB:
 			tngDB.close()
+
+# Get the list of all members who attended an event
+# INPUT: event name
+# OUTPUT: event attendees
+def get_attendees(eventName):
+    tngDB, cursor = get_connection()
+    error = None
+    if not tngDB or not cursor:
+        error = Exception("Database connection error.")
+    try:
+        cursor.execute("SELECT attendees FROM events WHERE title = %s", (eventName,))
+        result = cursor.fetchone()
+        if result:
+            attendees = result[0].split(",") if result[0] else []
+            if attendees:
+                return ", ".join(attendees)
+            else:
+                error = Exception("No attendees found.")
+        else:
+            error = Exception(f"Error: No event found with title '{eventName}'.")
+    except Exception as err:
+            error = err
+    finally:
+        cursor.close()
+        tngDB.close()
+        if error is not None:
+            raise error
