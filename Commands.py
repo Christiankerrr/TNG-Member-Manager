@@ -100,7 +100,7 @@ async def event_registration(ctx):
 
 ## Start Event
 @bot.command()
-async def start_event(ctx, eventName, isMeeting=1, startTime=None, endTime=None, duration=None, attendees=""):
+async def start_event(ctx, eventName, isMeeting=0, startTime=None, endTime=None, duration=None, attendees=""):
 
 	if startTime != None:
 		duration = endTime - startTime
@@ -121,7 +121,7 @@ async def start_meeting(ctx, eventName, isMeeting=1, startTime=None, endTime=Non
 	if startTime != None:
 		duration = endTime - startTime
 		# endTime = startTime + 60
-		
+
 	print(DB_Manage.write_event(eventName, isMeeting, startTime, endTime, duration=None, attendees=""))
 
 	# Call UI function to start an event with the sign in/out buttons, doesn't need special name
