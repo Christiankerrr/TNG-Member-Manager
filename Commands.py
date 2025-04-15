@@ -34,12 +34,12 @@ bot = BotClient(command_prefix = "?", intents = discord.Intents.all())
 ## Before Invoke
 # Meant to add anyone not currently in the DB to the DB
 # Additionally check permissions??
-# @bot.before_invoke
-# async def before_command(context):
-#
-# 	await bot.wait_until_ready()
-# 	if DB_Manage.locate_member(context.author.id) == False:
-# 		DB_Manage.write_member(context.author.id, context.author)
+@bot.before_invoke
+async def before_command(context):
+
+	await bot.wait_until_ready()
+	if DB_Manage.locate_member(context.author.id) == False:
+		DB_Manage.write_member(context.author.id, context.author, context.author.name)
 #
 # 	# if not isinstance(bot.userDB[context.author.id], context.command.permissions):
 #     #     await context.send(f"Sorry, you don't have the valid permissions to run that command. This command can only be run by Bot {context.command.permissions.ranking}s and above.")
@@ -60,10 +60,9 @@ async def show_events(ctx):
 
 ## Write Member to Database
 @bot.command()
-async def write_member(ctx, id, attr, name):
+async def write_member(ctx, memberID, memberTag, memberName):
 
-	newMember = Member(id, attr, name)
-	DB_Manage.write_member(newMember)
+	DB_Manage.write_member(memberID, memberTag, memberName)
 
 
 ## Untested Commands
@@ -112,7 +111,7 @@ async def start_event(ctx, eventName, isMeeting=0, startTime=None, endTime=None,
 	await ctx.send("Event registration has ended, thank you for your responses!")
 	# # Call UI function to start an event with the sign in/out buttons
 	# ui_func_StartEvent(eventName)
-	await ctx.send(eventName + " Event has begun! Have a great time everyone!")
+	await ctx.send(eventName + " has begun! Have a great time everyone!")
 
 ## Start Meeting
 @bot.command()
@@ -186,9 +185,9 @@ async def edit_event(ctx, eventName, attrName, newData, mode = "event"):
 
 ## Delete Member
 @bot.command()
-async def delete_member(ctx, memberTag):
+async def delete_member(ctx, memberID):
 
-	memberID = await commands.MemberConverter().convert(ctx, memberTag)
+	# memberID = await commands.MemberConverter().convert(ctx, memberTag)
 
 	# Call MySQL function to delete member
 	DB_Manage.remove_member(memberID)
