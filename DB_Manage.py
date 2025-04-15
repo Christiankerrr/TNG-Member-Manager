@@ -1,6 +1,6 @@
 # Touch-N-Go Member Manager
 # Adrian Fanjoy
-# Database management
+# Database management functions
 
 import pymysql
 from time import time as time_now
