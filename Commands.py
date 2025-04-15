@@ -39,7 +39,7 @@ async def before_command(context):
 
 	await bot.wait_until_ready()
 	if DB_Manage.locate_member(context.author.id) == False:
-		DB_Manage.write_member(context.author.id, context.author, context.author.name)
+		DB_Manage.write_member(context.author.id, context.author, context.author.display_name)
 #
 # 	# if not isinstance(bot.userDB[context.author.id], context.command.permissions):
 #     #     await context.send(f"Sorry, you don't have the valid permissions to run that command. This command can only be run by Bot {context.command.permissions.ranking}s and above.")
