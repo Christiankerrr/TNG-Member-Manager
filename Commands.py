@@ -6,6 +6,8 @@ import DB_Manage
 from Member import Member
 from discord.ext import commands
 from Bot import BotClient
+from time import time as time_now
+
 # from UI import VerifyView, send_diet, send_shirt_size, finish_survey
 
 
@@ -115,7 +117,7 @@ async def start_event(ctx, eventName, isMeeting=0, startTime=None, endTime=None,
 
 ## Start Meeting
 @bot.command()
-async def start_meeting(ctx, eventName, isMeeting=1, startTime=None, endTime=None, duration=None, attendees=""):
+async def start_meeting(ctx, eventName, isMeeting=1, startTime=time_now(), endTime=None, duration=None, attendees=""):
 
 	if startTime != None:
 		duration = endTime - startTime
@@ -129,10 +131,13 @@ async def start_meeting(ctx, eventName, isMeeting=1, startTime=None, endTime=Non
 
 ## End Event Command
 @bot.command()
-async def end_event(ctx, *args):
+async def end_event(ctx, eventName, endTime=time_now()):
 
+	mode = "event"
+	attrName = "endTime"
+	DB_Manage.edit_attr(mode, eventName, attrName, endTime)
 	# Call UI function to conclude event
-	ui_func_EndEvent()
+	# ui_func_EndEvent()
 	await ctx.send("The current event has concluded.")
 
 ## Show Profile
