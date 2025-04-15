@@ -100,9 +100,12 @@ async def event_registration(ctx):
 
 ## Start Event
 @bot.command()
-async def start_event(ctx, eventName, startTime=None, endTime=None):
+async def start_event(ctx, eventName, isMeeting=1, startTime=None, endTime=None, duration=None, attendees=""):
 
-	print(DB_Manage.write_event(eventName, startTime, endTime))
+	if startTime != None:
+		duration = endTime - startTime
+	
+	print(DB_Manage.write_event(eventName, isMeeting, startTime, endTime, duration=None, attendees=""))
 
 	# # Call UI function to end event registration function
 	# ui_func_EndRegistration()
@@ -113,7 +116,7 @@ async def start_event(ctx, eventName, startTime=None, endTime=None):
 
 ## Start Meeting
 @bot.command()
-async def start_meeting(ctx, eventName, startTime, endTime):
+async def start_meeting(ctx, eventName, startTime=None, endTime=None):
 
 	DB_Manage.write_event(eventName, startTime, endTime)
 
@@ -140,7 +143,7 @@ async def show_profile(ctx, memberTag):
 
 ## Manually Change Data
 @bot.command()
-async def edit_data(ctx, memberTag, attrName, newData, mode = "member", ):
+async def edit_member(ctx, memberTag, attrName, newData, mode = "member", ):
 
 	memberID = await commands.MemberConverter().convert(ctx, memberTag)
 
