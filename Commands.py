@@ -100,7 +100,7 @@ async def event_registration(ctx):
 
 ## Start Event
 @bot.command()
-async def start_event(ctx, eventName, startTime, endTime):
+async def start_event(ctx, eventName, startTime=None, endTime=None):
 
 	print(DB_Manage.write_event(eventName, startTime, endTime))
 
