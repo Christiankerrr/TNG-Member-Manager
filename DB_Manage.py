@@ -314,7 +314,7 @@ def print_table(mode):
             output = ["\t".join(column_headers)]
             output.extend("\t".join(str(value) for value in row) for row in results)
             return "\n".join(output)
-        error = Exception("No records found in {mode}.")
+        return f"No records found in {mode}."
     except Exception as err:
         error = err
     finally:
