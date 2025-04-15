@@ -11,7 +11,6 @@ def TNG_0():
 # Menu
 #choice = input("Choose from the following options:")
 #print("0. Create database")
-#print("1. TNG_1")
 #print("5. Exit")
 
 # Switch case
