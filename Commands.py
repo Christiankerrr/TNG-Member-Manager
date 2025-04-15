@@ -109,10 +109,10 @@ async def start_event(ctx, eventName, isMeeting=0, startTime=None, endTime=None,
 
 	# # Call UI function to end event registration function
 	# ui_func_EndRegistration()
-	# await ctx.send("Event registration has ended, thank you for your responses!")
+	await ctx.send("Event registration has ended, thank you for your responses!")
 	# # Call UI function to start an event with the sign in/out buttons
 	# ui_func_StartEvent(eventName)
-	# await ctx.send(eventName + " Event has begun! Have a great time everyone!")
+	await ctx.send(eventName + " Event has begun! Have a great time everyone!")
 
 ## Start Meeting
 @bot.command()
@@ -124,8 +124,8 @@ async def start_meeting(ctx, eventName, isMeeting=1, startTime=None, endTime=Non
 
 	print(DB_Manage.write_event(eventName, isMeeting, startTime, endTime, duration=None, attendees=""))
 
-	# Call UI function to start an event with the sign in/out buttons, doesn't need special name
-	ui_func_StartMeeting()
+	# # Call UI function to start an event with the sign in/out buttons, doesn't need special name
+	# ui_func_StartMeeting()
 	await ctx.send("Welcome to the meeting everyone! Please sign in at your earliest convenience.")
 
 ## End Event Command
