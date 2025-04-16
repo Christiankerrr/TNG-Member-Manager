@@ -54,6 +54,11 @@ async def show_members(ctx):
 	await ctx.send(DB_Manage.print_table("members"))
 
 @bot.command()
+async def shit_pants(ctx):
+
+	raise Exception("NOOOOOOOOO")
+
+@bot.command()
 async def show_events(ctx):
 
 	await ctx.send(DB_Manage.print_table("events"))
@@ -64,7 +69,6 @@ async def write_member(ctx, id, attr, name):
 
 	newMember = Member(id, attr, name)
 	DB_Manage.write_member(newMember)
-
 
 ## Untested Commands
 

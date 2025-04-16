@@ -1,6 +1,9 @@
 from discord.ext import commands, tasks
 from time import time as time_now
 
+from discord.ext.commands import Context, errors
+from discord.ext.commands._types import BotT
+
 from DB_Manage import get_attrs, edit_attr, get_total_hours, get_total_meetings, get_all_ids, get_event_names
 
 class BotClient (commands.Bot):
@@ -45,18 +48,13 @@ class BotClient (commands.Bot):
 	@tasks.loop(hours = 24)
 	async def update_event_db(self):
 
-		# Update duration
-		# put prune events here
-		pass
-
-	@tasks.loop(hours = 24)
-	async def prune_events(self):
-
 		for eventName in get_event_names():
 
 			eventAttrs = get_attrs("events", eventName)
 
-			if (eventAttrs["isMeeting"] == "False") and (time_now() - float(eventAttrs["startTime"]) > 24 * 60 * 60):
+			edit_attr("events", eventName, "duration", eventAttrs["endTime"] - eventAttrs["startTime"])
+
+			if (eventAttrs["isMeeting"] == 0) and (eventAttrs["endTime"] is None) and (time_now() - eventAttrs["startTime"] > 24 * 60 * 60):
 
 				edit_attr("events", eventName, "endTime", time_now())
 
@@ -71,6 +69,12 @@ class BotClient (commands.Bot):
 	async def on_ready(self):
 
 		pass
+
+	async def on_command_error(self, ctx, error):
+
+		errorType = str(type(error))
+
+		await ctx.send(f"There was a problem:\n\n`{errorType}`: {error}")
 
 	# def command(self, *args, **kwargs):
 	#
