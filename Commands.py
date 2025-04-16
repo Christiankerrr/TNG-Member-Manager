@@ -104,13 +104,17 @@ async def event_registration(ctx):
 async def start_event(ctx, eventName, isMeeting=0, startTime=None, endTime=None, attendees="", duration=None):
 	
 	if startTime is None:
-		startTime = datetime.now()
+		startTime = time_now() 
 		print(startTime)
 
-	if startTime != None:
+	if startTime is not None and endTime is None:
+		endTime = startTime + (60*60*12) #Standard 12 hour event
+
+	if startTime is not None and endTime is not None:
 		duration = endTime - startTime
+	else: duration = None
 	
-	print(DB_Manage.write_event(eventName, isMeeting, startTime, endTime, duration=None, attendees=""))
+	print(DB_Manage.write_event(eventName, isMeeting, startTime, endTime, duration, attendees))
 
 	# # Call UI function to end event registration function
 	# ui_func_EndRegistration()
