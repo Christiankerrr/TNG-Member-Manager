@@ -1,9 +1,9 @@
 # Touch-N-Go Member Manager
 # Adrian Fanjoy
-# Database management
+# Database management functions
 
 import pymysql
-from datetime import datetime
+from time import time as time_now
 
 # Establish connection
 # OUTPUT: database and cursor
@@ -12,7 +12,7 @@ def get_connection():
         tngDB = pymysql.connect(
             host="localhost",
             user="root",
-            password="data1013$",
+            password="se300",
             database="memberdb"
         )
         return tngDB, tngDB.cursor()
@@ -21,11 +21,12 @@ def get_connection():
 
 # Create new database
 def create_database():
+    error = None
     try:
         tngDB = pymysql.connect(
             host="localhost",
             user="root",
-            password="data1013$"
+            password="se300"
         )
         cursor = tngDB.cursor()
         cursor.execute("SHOW DATABASES")
@@ -39,13 +40,13 @@ def create_database():
                 tag VARCHAR(100),
                 name VARCHAR(255),
                 diet TEXT,
-                sze VARCHAR(50),
+                size VARCHAR(50),
                 cut VARCHAR(50),
                 pos VARCHAR(100),
                 points_spent INT DEFAULT 0,
                 coupons INT DEFAULT 0,
                 meetings INT DEFAULT 0,
-                hours INT DEFAULT 0,
+                hours FLOAT DEFAULT 0,
                 is_active TINYINT(1) DEFAULT 1,
                 is_trained TINYINT(1) DEFAULT 0
             )
@@ -53,47 +54,38 @@ def create_database():
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS events (
                 title VARCHAR(255),
-                start DATETIME,
-                end DATETIME,
-                duration INT,
+                start DOUBLE PRECISION(20, 2),
+                end DOUBLE PRECISION(20, 2),
+                duration DOUBLE PRECISION(20, 2),
                 attendees TEXT,
                 isMeeting TINYINT(1) DEFAULT 0
             )
         """)
-        return "Database and tables initialized successfully."
-    except pymysql.MySQLError as err:
-        return f"Error: {err}"
+    except Exception as err:
+        error = err
+    finally:
+        if error is not None:
+            raise error
 
-# Add a member
+# Add a member to the member database
 # INPUT: id, tag, name, other values can be defaults
 def write_member(memberID, newTag, name, diet=None, size=None, cut=None,
                  position="Member", points_spent=0, coupons=0,
                  meetings=0, hours=0, is_trained=False):
     tngDB, cursor = get_connection()
+    error = None
     if not tngDB or not cursor:
-        return "Database connection error."
+        error = Exception("Database connection error.")
     try:
-        memberID = str(memberID)
-        newTag = str(newTag)
-        name = str(name)
-        diet = str(diet) if diet is not None else None
-        size = str(size) if size is not None else None
-        cut = str(cut) if cut is not None else None
-        position = str(position)
-        points_spent = str(points_spent)
-        coupons = str(coupons)
-        meetings = str(meetings)
-        hours = str(hours)
-        is_trained = "1" if is_trained else "0"
         cursor.execute(
             "SELECT COUNT(*) FROM members WHERE id = %s OR tag = %s",
             (memberID, newTag)
         )
         if cursor.fetchone()[0] > 0:
-            return f"Member with ID {memberID} or Tag {newTag} already exists."
+            error = Exception(f"Member with ID {memberID} or Tag {newTag} already exists.")
         query = """
             INSERT INTO members (
-                id, tag, nme, diet, sze, cut, pos, points_spent,
+                id, tag, name, diet, size, cut, pos, points_spent,
                 coupons, meetings, hours, is_active, is_trained
             ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 1, %s)
         """
@@ -103,27 +95,22 @@ def write_member(memberID, newTag, name, diet=None, size=None, cut=None,
         )
         cursor.execute(query, values)
         tngDB.commit()
-        return "Member added successfully."
-    except pymysql.MySQLError as err:
-        return f"Error: {err}"
+    except Exception as err:
+        error = err
     finally:
         cursor.close()
         tngDB.close()
+        if error is not None:
+            raise error
 
-# Add an event
-# INPUT: title, start, end, all other values can be defaults
-def write_event(title, start, end, duration=0, attendees="", isMeeting=1):
+# Add an event to the event table
+# INPUT: title, all other values can be defaults
+def write_event(title, isMeeting, start=None, end=None, duration=0, attendees=""):
     tngDB, cursor = get_connection()
+    error = None
     if not tngDB or not cursor:
-        return "Database connection error."
+        error = Exception("Database connection error.")
     try:
-        title = str(title)
-        start = str(start)
-        end = str(end)
-        duration = str(duration)
-        attendees = str(attendees)
-        isMeeting = str(isMeeting)
-
         query = """
             INSERT INTO events (title, start, end, duration, attendees, isMeeting) 
             VALUES (%s, %s, %s, %s, %s, %s)
@@ -131,178 +118,194 @@ def write_event(title, start, end, duration=0, attendees="", isMeeting=1):
         values = (title, start, end, duration, attendees, isMeeting)
         cursor.execute(query, values)
         tngDB.commit()
-        return "Event added successfully."
-    except pymysql.MySQLError as err:
-        return f"Error: {err}"
+    except Exception as err:
+        error = err
     finally:
         cursor.close()
         tngDB.close()
+        if error is not None:
+            raise error
 
 # Remove a member from the database
 # INPUT: member ID
 def remove_member(memberID):
     tngDB, cursor = get_connection()
+    error = None
     if not tngDB or not cursor:
-        return "Database connection error."
+        error = Exception("Database connection error.")
     try:
         cursor.execute("DELETE FROM members WHERE id = %s", (memberID,))
         tngDB.commit()
-        return "Member removed successfully." if cursor.rowcount > 0 else "No member found with the given ID."
-    except pymysql.MySQLError as err:
-        return f"Error: {err}"
+        if cursor.rowcount == 0:
+            error = Exception("No record found with the given identifier.")
+    except Exception as err:
+        error = err
     finally:
         cursor.close()
         tngDB.close()
+        if error is not None:
+            raise error
 
 # Remove an event from the database
 # INPUT: event name
 def remove_event(eventName):
     tngDB, cursor = get_connection()
+    error = None
     if not tngDB or not cursor:
-        return "Database connection error."
+        error = Exception("Database connection error.")
     try:
         cursor.execute("DELETE FROM events WHERE title = %s", (eventName,))
         tngDB.commit()
-        return "Event removed successfully." if cursor.rowcount > 0 else "No event found with the given name."
-    except pymysql.MySQLError as err:
-        return f"Error: {err}"
+        if cursor.rowcount == 0:
+            error = Exception("No record found with the given identifier.")
+    except Exception as err:
+        error = err
     finally:
         cursor.close()
         tngDB.close()
+        if error is not None:
+            raise error
 
 # Edit the attributes of a member or event
 # INPUT: mode, attribute name, new attribute value
 def edit_attr(mode, recordIdentifier, attrName, newAttrVal):
     tngDB, cursor = get_connection()
+    error = None
     if not tngDB or not cursor:
-        return "Database connection error."
+        error = Exception("Database connection error.")
     try:
-        mode = str(mode)
-        recordIdentifier = str(recordIdentifier)
-        attrName = str(attrName)
-        newAttrVal = str(newAttrVal)
-        id_column = "id" if mode == "member" else "title"
+        if attrName in ["diet", "attendees"] and isinstance(newAttrVal, list):
+            newAttrVal = str(newAttrVal)
+
+        id_column = "id" if mode == "members" else "title"
         cursor.execute(f"DESCRIBE {mode}")
         columns = [row[0] for row in cursor.fetchall()]
         if attrName not in columns:
-            return f"Invalid attribute. Available attributes: {', '.join(columns)}"
+            error = Exception(f"Invalid attribute. Available attributes: {', '.join(columns)}")
         cursor.execute(
             f"UPDATE {mode} SET {attrName} = %s WHERE {id_column} = %s",
             (newAttrVal, recordIdentifier)
         )
         tngDB.commit()
-        return "Attribute updated successfully." if cursor.rowcount > 0 else "No record found with the given identifier."
-    except pymysql.MySQLError as err:
-        return f"Error: {err}"
+        if cursor.rowcount == 0:
+            error = Exception("No record found with the given identifier.")
+    except Exception as err:
+        error = err
     finally:
         cursor.close()
         tngDB.close()
+        if error is not None:
+            raise error
 
 # Get attributes for member or event
 # INPUT: member ID
 # OUTPUT: dictionary with record info
 def get_attrs(mode, recordIdentifier):
     tngDB, cursor = get_connection()
+    error = None
+    if not tngDB or not cursor:
+        error = Exception("Database connection error.")
     try:
         table = "members" if mode == "member" else "events"
         id_column = "id" if mode == "member" else "title"
 
         cursor.execute(f"SELECT * FROM {table} WHERE {id_column} = %s", (recordIdentifier,))
         result = cursor.fetchone()
-
         if result:
             column_headers = [desc[0] for desc in cursor.description]
             return dict(zip(column_headers, result))
-        return f"No {mode} found with identifier: {recordIdentifier}"
-    except pymysql.MySQLError as err:
-        return f"Error: {err}"
+        error = Exception(f"No {mode} found with identifier: {recordIdentifier}")
+    except Exception as err:
+        error = err
     finally:
         cursor.close()
         tngDB.close()
-
-# Get the list of all members who attended an event
-# INPUT: event name
-# OUTPUT: event attendees
-def get_attendees(eventName):
-    tngDB, cursor = get_connection()
-    if not tngDB or not cursor:
-        return "Error: Unable to connect to the database."
-    try:
-        cursor.execute("SELECT attendees FROM events WHERE title = %s", (eventName,))
-        result = cursor.fetchone()
-        if result:
-            attendees = result[0].split(",") if result[0] else []
-            return ", ".join(attendees) if attendees else "No attendees found."
-        else:
-            return f"Error: No event found with title '{eventName}'."
-    except pymysql.MySQLError as err:
-        return f"Error: {err}"
-    finally:
-        cursor.close()
-        tngDB.close()
+        if error is not None:
+            raise error
 
 # Get all ids in the database
 # OUTPUT: list of all ids as integers
 def get_all_ids():
     tngDB, cursor = get_connection()
+    error = None
     if not tngDB or not cursor:
-        return "Database connection error."
+        error = Exception("Database connection error.")
     try:
         cursor.execute("SELECT id FROM members")
         return [row[0] for row in cursor.fetchall()]
-    except pymysql.MySQLError as err:
-        return f"Error: {err}"
+    except Exception as err:
+        error = err
     finally:
         cursor.close()
         tngDB.close()
+        if error is not None:
+            raise error
 
 # Get sum of hours from all events
 # OUTPUT: string number of hours
 def get_total_hours():
     tngDB, cursor = get_connection()
+    error = None
+    if not tngDB or not cursor:
+        error = Exception("Database connection error.")
     try:
         cursor.execute("SELECT COALESCE(SUM(duration), 0) FROM events WHERE isMeeting = 0")
         total_hours = cursor.fetchone()[0]
         return total_hours
-    except pymysql.MySQLError as err:
-        return f"Error: {err}"
+    except Exception as err:
+        error = err
     finally:
         cursor.close()
         tngDB.close()
+        if error is not None:
+            raise error
 
 # Get total number of meetings
 # OUTPUT: string number of meetings
 def get_total_meetings():
     tngDB, cursor = get_connection()
+    error = None
+    if not tngDB or not cursor:
+        error = Exception("Database connection error.")
     try:
         cursor.execute("SELECT COUNT(*) FROM events WHERE isMeeting = 1")
-        total_meetings = cursor.fetchone()[0]
-        return total_meetings
-    except pymysql.MySQLError as err:
-        return f"Error: {err}"
+        totMeet = cursor.fetchone()[0]
+        return totMeet
+    except Exception as err:
+        error = err
     finally:
         cursor.close()
         tngDB.close()
+        if error is not None:
+            raise error
 
 # Get all event names in the table
 # OUTPUT: list of event names
 def get_event_names():
     tngDB, cursor = get_connection()
+    error = None
+    if not tngDB or not cursor:
+        error = Exception("Database connection error.")
     if not tngDB or not cursor:
         return []
     try:
         cursor.execute("SELECT title FROM events")
         return [row[0] for row in cursor.fetchall()]
-    except pymysql.MySQLError as err:
-        return []
+    except Exception as err:
+        error = err
     finally:
         cursor.close()
         tngDB.close()
+        if error is not None:
+            raise error
 
 # Get either table as a string
 # OUTPUT: string with table
 def print_table(mode):
     tngDB, cursor = get_connection()
+    error = None
+    if not tngDB or not cursor:
+        error = Exception("Database connection error.")
     try:
         cursor.execute(f"SELECT * FROM {mode}")
         results = cursor.fetchall()
@@ -312,19 +315,22 @@ def print_table(mode):
             output.extend("\t".join(str(value) for value in row) for row in results)
             return "\n".join(output)
         return f"No records found in {mode}."
-    except pymysql.MySQLError as err:
-        return f"Error: {err}"
+    except Exception as err:
+        error = err
     finally:
         cursor.close()
         tngDB.close()
+        if error is not None:
+            raise error
 
 # Determine if an event can be signed in to
 # INPUT: name of the event
 # OUTPUT: boolean
 def can_sign_in(eventName):
     tngDB, cursor = get_connection()
+    error = None
     if not tngDB or not cursor:
-        return False
+        error = Exception("Database connection error.")
     try:
         cursor.execute("SELECT start, end FROM events WHERE title = %s", (eventName,))
         result = cursor.fetchone()
@@ -335,65 +341,86 @@ def can_sign_in(eventName):
         if not startTime or not endTime:
             return False
 
-        current_time = datetime.now()
+        current_time = time_now()
         return startTime <= current_time <= endTime
-    except pymysql.MySQLError as err:
-        return False
+    except Exception as err:
+        error = err
     finally:
         cursor.close()
         tngDB.close()
+        if error is not None:
+            raise error
 
-# Determine if an event can be registered for
+# Determine if an event can be registered
 # INPUT: name of the event
 # OUTPUT: boolean
 def can_register(eventName):
     tngDB, cursor = get_connection()
+    error = None
     if not tngDB or not cursor:
-        return False
+        error = Exception("Database connection error.")
     try:
         cursor.execute("SELECT start FROM events WHERE title = %s", (eventName,))
         result = cursor.fetchone()
-        if not result:
+        if result is None:
             return False
-
         startTime = result[0]
-        if not startTime:
-            return False
-
-        current_time = datetime.now()
-        return current_time < startTime
-    except pymysql.MySQLError as err:
-        return False
+        return startTime is None
+    except Exception as err:
+        error = err
     finally:
         cursor.close()
         tngDB.close()
+        if error is not None:
+            raise error
 
 # Add a member to the list of event attendees
 # INPUT: event name and member ID
 def add_attend(eventName, memberID):
     tngDB, cursor = get_connection()
+    error = None
     if not tngDB or not cursor:
-        return "Database connection error."
+        error = Exception("Database connection error.")
     try:
         cursor.execute("SELECT attendees FROM events WHERE title = %s", (eventName,))
         result = cursor.fetchone()
         if not result:
-            return "Event not found."
+            error = Exception("Event not found.")
 
         attendees = result[0]
         attendList = attendees.split(",") if attendees else []
 
         if memberID in attendList:
-            return "Member is already an attendee."
+            error = Exception("Member is already an attendee.")
 
         attendList.append(memberID)
         updatedAttend = ",".join(attendList)
 
         cursor.execute("UPDATE events SET attendees = %s WHERE title = %s", (updatedAttend, eventName))
         tngDB.commit()
-        return "Member added to event attendees."
-    except pymysql.MySQLError as err:
-        return f"Error: {err}"
+    except Exception as err:
+        error = err
     finally:
         cursor.close()
         tngDB.close()
+        if error is not None:
+            raise error
+
+# Determine if a member exists in the database
+# INPUT: member ID
+# OUTPUT: boolean
+def locate_member(memberID):
+    tngDB, cursor = get_connection()
+    error = None
+    if not tngDB or not cursor:
+        error = Exception("Database connection error.")
+    try:
+        cursor.execute("SELECT 1 FROM members WHERE id = %s LIMIT 1", (str(memberID),))
+        return cursor.fetchone() is not None
+    except Exception as err:
+        error = err
+    finally:
+        cursor.close()
+        tngDB.close()
+        if error is not None:
+            raise error
