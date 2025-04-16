@@ -12,7 +12,7 @@ def get_connection():
         tngDB = pymysql.connect(
             host="localhost",
             user="root",
-            password="MANunited1!1!1!",
+            password="se300",
             database="memberdb"
         )
         return tngDB, tngDB.cursor()
@@ -26,7 +26,7 @@ def create_database():
         tngDB = pymysql.connect(
             host="localhost",
             user="root",
-            password="MANunited1!1!1!"
+            password="se300"
         )
         cursor = tngDB.cursor()
         cursor.execute("SHOW DATABASES")
@@ -54,9 +54,9 @@ def create_database():
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS events (
                 title VARCHAR(255),
-                start FLOAT,
-                end FLOAT,
-                duration FLOAT,
+                start DOUBLE PRECISION(20, 2),
+                end DOUBLE PRECISION(20, 2),
+                duration DOUBLE PRECISION(20, 2),
                 attendees TEXT,
                 isMeeting TINYINT(1) DEFAULT 0
             )
