@@ -22,6 +22,8 @@ def get_connection():
 # Create new database
 def create_database():
     error = None
+    tngDB = None
+    cursor = None
     try:
         tngDB = pymysql.connect(
             host="localhost",
@@ -31,8 +33,10 @@ def create_database():
         cursor = tngDB.cursor()
         cursor.execute("SHOW DATABASES")
         databases = [db[0].lower() for db in cursor.fetchall()]
-        if "memberdb" not in databases:
-            cursor.execute("CREATE DATABASE memberdb")
+        if "memberdb" in databases:
+            raise Exception("Database 'memberdb' already exists.")
+
+        cursor.execute("CREATE DATABASE memberdb")
         cursor.execute("USE memberdb")
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS members (
@@ -64,6 +68,40 @@ def create_database():
     except Exception as err:
         error = err
     finally:
+        if cursor is not None:
+            cursor.close()
+        if tngDB is not None:
+            tngDB.close()
+        if error is not None:
+            raise error
+
+# Delete database
+# INPUT: name of database
+def delete_database(dbName):
+    error = None
+    tngDB = None
+    cursor = None
+    try:
+        tngDB = pymysql.connect(
+            host="localhost",
+            user="root",
+            password="se300"
+        )
+        cursor = tngDB.cursor()
+        cursor.execute("SHOW DATABASES")
+        databases = [db[0].lower() for db in cursor.fetchall()]
+        if dbName.lower() in databases:
+            cursor.execute(f"DROP DATABASE `{dbName}`")
+            tngDB.commit()
+        else:
+            error = Exception(f"Database '{dbName}' does not exist.")
+    except Exception as err:
+        error = err
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if tngDB is not None:
+            tngDB.close()
         if error is not None:
             raise error
 
