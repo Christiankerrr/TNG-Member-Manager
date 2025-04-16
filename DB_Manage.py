@@ -177,7 +177,7 @@ def edit_attr(mode, recordIdentifier, attrName, newAttrVal):
         if attrName in ["diet", "attendees"] and isinstance(newAttrVal, list):
             newAttrVal = str(newAttrVal)
 
-        id_column = "id" if mode == "member" else "title"
+        id_column = "id" if mode == "members" else "title"
         cursor.execute(f"DESCRIBE {mode}")
         columns = [row[0] for row in cursor.fetchall()]
         if attrName not in columns:

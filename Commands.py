@@ -7,6 +7,7 @@ from Member import Member
 from discord.ext import commands
 from Bot import BotClient
 from time import time as time_now
+from datetime import datetime
 
 # from UI import VerifyView, send_diet, send_shirt_size, finish_survey
 
@@ -47,9 +48,7 @@ async def before_command(context):
 #     #     await context.send(f"Sorry, you don't have the valid permissions to run that command. This command can only be run by Bot {context.command.permissions.ranking}s and above.")
 
 
-## Tested-Working Commands
-
-## Print Database
+## Print Databases
 @bot.command()
 async def show_members(ctx):
 
@@ -83,25 +82,30 @@ async def event_registration(ctx):
 	# need to add functionality where register button collects id
 	# and send to DB?
 	
-	embed = discord.Embed(
-        title="Registration For 'Add Variable for events here'",
-        color=discord.Color.blue()
-    )
-	embed.add_field(name="**Meeting Area**", value="Blank", inline=False)
-	embed.add_field(name="**Need help?**", value="[Message Blank](https://google.com)", inline=False)
+	# embed = discord.Embed(
+    #     title="Registration For 'Add Variable for events here'",
+    #     color=discord.Color.blue()
+    # )
+	# embed.add_field(name="**Meeting Area**", value="Blank", inline=False)
+	# embed.add_field(name="**Need help?**", value="[Message Blank](https://google.com)", inline=False)
 
-	view = discord.ui.View()
-	sign_in = discord.ui.Button(label="Sign in", style=discord.ButtonStyle.link, url="https://google.com")
-	sign_out = discord.ui.Button(label="Sign Out", style=discord.ButtonStyle.link, url="https://google.com")
+	# view = discord.ui.View()
+	# sign_in = discord.ui.Button(label="Sign in", style=discord.ButtonStyle.link, url="https://google.com")
+	# sign_out = discord.ui.Button(label="Sign Out", style=discord.ButtonStyle.link, url="https://google.com")
 
-	view.add_item(sign_in)
-	view.add_item(sign_out)
+	# view.add_item(sign_in)
+	# view.add_item(sign_out)
 
-	await ctx.send(embed=embed, view=view)
+	# await ctx.send(embed=embed, view=view)
+	pass
 
 ## Start Event
 @bot.command()
-async def start_event(ctx, eventName, isMeeting=0, startTime=None, endTime=None, duration=None, attendees=""):
+async def start_event(ctx, eventName, isMeeting=0, startTime=None, endTime=None, attendees="", duration=None):
+	
+	if startTime is None:
+		startTime = datetime.now()
+		print(startTime)
 
 	if startTime != None:
 		duration = endTime - startTime
@@ -117,13 +121,17 @@ async def start_event(ctx, eventName, isMeeting=0, startTime=None, endTime=None,
 
 ## Start Meeting
 @bot.command()
-async def start_meeting(ctx, eventName, isMeeting=1, startTime=time_now(), endTime=None, duration=None, attendees=""):
+async def start_meeting(ctx, eventName, isMeeting=1, startTime=None, endTime=None, duration=None, attendees=""):
+
+	if startTime is None:
+		startTime = time_now()
+		print(startTime)
 
 	if startTime != None:
 		duration = endTime - startTime
 		# endTime = startTime + 60
 
-	print(DB_Manage.write_event(eventName, isMeeting, startTime, endTime, duration=None, attendees=""))
+	DB_Manage.write_event(eventName, isMeeting, startTime, endTime, duration, attendees)
 
 	# # Call UI function to start an event with the sign in/out buttons, doesn't need special name
 	# ui_func_StartMeeting()
@@ -133,8 +141,8 @@ async def start_meeting(ctx, eventName, isMeeting=1, startTime=time_now(), endTi
 @bot.command()
 async def end_event(ctx, eventName, endTime=time_now()):
 
-	mode = "event"
-	attrName = "endTime"
+	mode = 'events'
+	attrName = 'endTime'
 	DB_Manage.edit_attr(mode, eventName, attrName, endTime)
 	# Call UI function to conclude event
 	# ui_func_EndEvent()
@@ -147,16 +155,16 @@ async def show_profile(ctx, memberTag):
 	memberID = await commands.MemberConverter().convert(ctx, memberTag)
 
 	# Call UI function to display profile
-	ui_func_DisplayProfile(memberID)
+	# ui_func_DisplayProfile(memberID)
 
 ## Manually Change Data
 @bot.command()
-async def edit_member(ctx, memberTag, attrName, newData, mode = "member", ):
+async def edit_member(ctx, memberTag, attrName, newData, mode="members", ):
 
-	memberID = await commands.MemberConverter().convert(ctx, memberTag)
+	member = await commands.MemberConverter().convert(ctx, memberTag)
 
+	DB_Manage.edit_attr(mode, member.id, attrName, newData)
 	# Call MySQL function to update member databse with given parameters
-	DB_Manage.edit_attr(mode, memberID, attrName, newData)
 
 	# if DB_Manage.edit_attr(memberTag.id, attrName, newData) == True:
 	# 	await ctx.send("Data successfully changed to " + newData)
@@ -165,7 +173,7 @@ async def edit_member(ctx, memberTag, attrName, newData, mode = "member", ):
 
 ## Edit Event
 @bot.command()
-async def edit_event(ctx, eventName, attrName, newData, mode = "event"):
+async def edit_event(ctx, eventName, attrName, newData, mode = "events"):
 
 	if eventName.lower() == "meeting":
 		# Assumption that the only thing that could change in meeting is the time?
