@@ -81,7 +81,8 @@ async def member_status(ctx, memberTag):
 
 ## Start Event Registration 
 @bot.command()
-async def event_registration(ctx):
+async def event_registration(ctx, eventName, link):
+
 
 	# need to add functionality where register button collects id
 	# and send to DB?
@@ -105,8 +106,10 @@ async def event_registration(ctx):
 
 ## Start Event
 @bot.command()
-async def start_event(ctx, eventName, isMeeting=0, startTime=None, endTime=None, attendees="", duration=None):
+async def start_event(ctx, eventName, startTime=None, endTime=None, attendees=""):
 	
+	isMeeting = 0
+
 	if startTime is None:
 		startTime = time_now() 
 		print(startTime)
@@ -129,15 +132,20 @@ async def start_event(ctx, eventName, isMeeting=0, startTime=None, endTime=None,
 
 ## Start Meeting
 @bot.command()
-async def start_meeting(ctx, eventName, isMeeting=1, startTime=None, endTime=None, duration=None, attendees=""):
+async def start_meeting(ctx, eventName, startTime=None, endTime=None, attendees=""):
+
+	isMeeting = 1
 
 	if startTime is None:
 		startTime = time_now()
 		print(startTime)
 
-	if startTime != None:
+	if startTime is not None and endTime is None:
+		endTime = startTime + (60*60) #Standard 1 hour event
+
+	if startTime is not None and endTime is not None:
 		duration = endTime - startTime
-		# endTime = startTime + 60
+	else: duration = None
 
 	DB_Manage.write_event(eventName, isMeeting, startTime, endTime, duration, attendees)
 
