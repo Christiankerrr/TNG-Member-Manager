@@ -52,11 +52,14 @@ class BotClient (commands.Bot):
 
 			eventAttrs = get_attrs("events", eventName)
 
-			edit_attr("events", eventName, "duration", eventAttrs["endTime"] - eventAttrs["startTime"])
+			if (eventAttrs["start"] is not None) and (eventAttrs["end"] is not None):
 
-			if (eventAttrs["isMeeting"] == 0) and (eventAttrs["endTime"] is None) and (time_now() - eventAttrs["startTime"] > 24 * 60 * 60):
+				edit_attr("events", eventName, "duration", eventAttrs["end"] - eventAttrs["start"])
 
-				edit_attr("events", eventName, "endTime", time_now())
+			if (eventAttrs["isMeeting"] == 0) and (eventAttrs["end"] is None) and (time_now() - eventAttrs["start"] > 24 * 60 * 60):
+
+				edit_attr("events", eventName, "end", time_now())
+				edit_attr("events", eventName, "duration", eventAttrs["end"] - eventAttrs["start"])
 
 	def __init__(self, *args, **kwargs):
 
@@ -65,6 +68,7 @@ class BotClient (commands.Bot):
 		self.strip_after_prefix = True
 
 		self.tngServerID = 1014692801281273868
+		self.dateTimeFmt = "%m/%d/%Y %I:%M %p"
 
 	async def on_ready(self):
 

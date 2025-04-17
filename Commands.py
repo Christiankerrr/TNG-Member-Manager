@@ -1,16 +1,17 @@
 # test
 import discord
 import pymysql
-import DB_Manage
 
 from Member import Member
 from discord.ext import commands
 from Bot import BotClient
-from time import time as time_now
+from time import time as time_now, strftime as format_time_str, localtime as to_time_struct, strptime as parse_time_str, mktime as to_secs
 from datetime import datetime
 
 # from UI import VerifyView, send_diet, send_shirt_size, finish_survey
 
+import DB_Manage
+import Functions
 
 bot = BotClient(command_prefix = "?", intents = discord.Intents.all())
 
@@ -41,7 +42,7 @@ bot = BotClient(command_prefix = "?", intents = discord.Intents.all())
 async def before_command(context):
 
 	await bot.wait_until_ready()
-	if DB_Manage.locate_member(context.author.id) == False:
+	if not DB_Manage.locate_member(context.author.id):
 		DB_Manage.write_member(context.author.id, context.author, context.author.display_name)
 #
 # 	# if not isinstance(bot.userDB[context.author.id], context.command.permissions):
@@ -72,16 +73,9 @@ async def write_member(ctx, memberID, memberTag, memberName):
 
 ## Untested Commands
 
-## Get Member Status
-@bot.command()
-async def member_status(ctx, memberTag):
-
-	memberID = ctx.author.ID
-	await ctx.send(DB_Manage.get_status(memberID))
-
 ## Start Event Registration 
 @bot.command()
-async def event_registration(ctx, eventName, link):
+async def start_registration(ctx, eventName, link):
 
 
 	# need to add functionality where register button collects id
@@ -106,22 +100,17 @@ async def event_registration(ctx, eventName, link):
 
 ## Start Event
 @bot.command()
-async def start_event(ctx, eventName, startTime=None, endTime=None, attendees=""):
+async def start_event(ctx, eventName, startTimeStr = None):
+
+	if startTimeStr is None:
+
+		startTime = time_now()
+
+	else:
+
+		startTime = to_secs(parse_time_str(startTimeStr, bot.dateTimeFmt))
 	
-	isMeeting = 0
-
-	if startTime is None:
-		startTime = time_now() 
-		print(startTime)
-
-	if startTime is not None and endTime is None:
-		endTime = startTime + (60*60*12) #Standard 12 hour event
-
-	if startTime is not None and endTime is not None:
-		duration = endTime - startTime
-	else: duration = None
-	
-	print(DB_Manage.write_event(eventName, isMeeting, startTime, endTime, duration, attendees))
+	print(DB_Manage.write_event(title = eventName, isMeeting = 0, start = startTime))
 
 	# # Call UI function to end event registration function
 	# ui_func_EndRegistration()
@@ -132,22 +121,19 @@ async def start_event(ctx, eventName, startTime=None, endTime=None, attendees=""
 
 ## Start Meeting
 @bot.command()
-async def start_meeting(ctx, eventName, startTime=None, endTime=None, attendees=""):
+async def start_meeting(ctx, startTimeStr = None):
 
-	isMeeting = 1
+	meetingName = format_time_str("Member Meeting %m/%d/%Y", to_time_struct())
 
-	if startTime is None:
+	if startTimeStr is None:
 		startTime = time_now()
-		print(startTime)
+	else:
+		startTime = to_secs(parse_time_str(startTimeStr, bot.dateTimeFmt))
 
-	if startTime is not None and endTime is None:
-		endTime = startTime + (60*60) #Standard 1 hour event
+	endTime = startTime + (60 * 60) # Standard 1-hour event
+	duration = endTime - startTime
 
-	if startTime is not None and endTime is not None:
-		duration = endTime - startTime
-	else: duration = None
-
-	DB_Manage.write_event(eventName, isMeeting, startTime, endTime, duration, attendees)
+	DB_Manage.write_event(title = meetingName, isMeeting = 1, start = startTime, end = endTime, duration = duration)
 
 	# # Call UI function to start an event with the sign in/out buttons, doesn't need special name
 	# ui_func_StartMeeting()
@@ -155,11 +141,28 @@ async def start_meeting(ctx, eventName, startTime=None, endTime=None, attendees=
 
 ## End Event Command
 @bot.command()
-async def end_event(ctx, eventName, endTime=time_now()):
+async def end_event(ctx, eventName, endTimeStr = None):
 
-	mode = 'events'
-	attrName = 'endTime'
-	DB_Manage.edit_attr(mode, eventName, attrName, endTime)
+	eventAttrs = DB_Manage.get_attrs("events", eventName)
+
+	if eventAttrs["isMeeting"] == 1:
+
+		await ctx.send("Can not end a meeting.")
+		return
+
+	startTime = eventAttrs["start"]
+	if startTime is None:
+
+		await ctx.send("Can not end an event that has not started.")
+		return
+
+	if endTimeStr is None:
+		endTime = time_now()
+	else:
+		endTime = to_secs(parse_time_str(endTimeStr, bot.dateTimeFmt))
+
+	DB_Manage.edit_attr("events", eventName, "end", endTime)
+	DB_Manage.edit_attr("events", eventName, "duration", endTime - startTime)
 	# Call UI function to conclude event
 	# ui_func_EndEvent()
 	await ctx.send("The current event has concluded.")
@@ -168,18 +171,22 @@ async def end_event(ctx, eventName, endTime=time_now()):
 @bot.command()
 async def show_profile(ctx, memberTag):
 
-	memberID = await commands.MemberConverter().convert(ctx, memberTag)
+	member = await commands.MemberConverter().convert(ctx, memberTag)
 
 	# Call UI function to display profile
 	# ui_func_DisplayProfile(memberID)
 
 ## Manually Change Data
 @bot.command()
-async def edit_member(ctx, memberTag, attrName, newData, mode="members", ):
+async def edit_member(ctx, memberTag, attrName, newDataStr):
 
 	member = await commands.MemberConverter().convert(ctx, memberTag)
 
-	DB_Manage.edit_attr(mode, member.id, attrName, newData)
+	memberAttrs = DB_Manage.get_attrs("members", member.id)
+
+	newData = Functions.sanitary_eval(newDataStr, locals = {"var": memberAttrs[attrName]})
+
+	DB_Manage.edit_attr("members", member.id, attrName, newData)
 	# Call MySQL function to update member databse with given parameters
 
 	# if DB_Manage.edit_attr(memberTag.id, attrName, newData) == True:
@@ -189,23 +196,24 @@ async def edit_member(ctx, memberTag, attrName, newData, mode="members", ):
 
 ## Edit Event
 @bot.command()
-async def edit_event(ctx, eventName, attrName, newData, mode = "events"):
+async def edit_event(ctx, eventName, attrName, newDataStr):
 
-	if eventName.lower() == "meeting":
-		# Assumption that the only thing that could change in meeting is the time?
-		endTime = 60 + newData
+	eventAttrs = DB_Manage.get_attrs("events", eventName)
 
-		# Call MySQL function to update event database
-		DB_Manage.edit_attr(mode, eventName.lower(), attrName, newData)
-		DB_Manage.edit_attr(eventName, endTimeAttributeName, endTime)	
+	newData = Functions.sanitary_eval(newDataStr, locals = {"var": eventAttrs[attrName]})
+
+	try:
+
+		DB_Manage.edit_attr("events", eventName, attrName, newData)
+
+	except Exception as error:
+
+		await ctx.send(error)
 
 	# 	if updateEvent(eventName, attrName, newData) == True:
 	# 		await ctx.send("Event data successfully changed")
 	# 	else:
 	# 		await ctx.send("Data change failed, please try again.")
-	else:
-	 	# Call MySQL function to update event database
-		DB_Manage.edit_attr(mode, eventName.lower(), attrName, newData)	
 
 	# 	if updateEvent(eventName, attrName, newData) == True:
 	# 		await ctx.send("Event data successfully changed")
