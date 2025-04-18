@@ -5,6 +5,17 @@ def sanitary_eval(expr, locals = {}):
 
 		if name not in locals:
 
-			raise NameError
+			allowedNames = list(locals.keys())
+			if allowedNames != []:
+
+				raise NameError(
+					f"\"{name}\" is an illegal name for evaluations. The only names allowed in evaluations are {allowedNames}."
+				)
+
+			else:
+
+				raise NameError(
+					f"\"{name}\" is an illegal name for evaluations. There are no names allowed in these evaluations."
+				)
 
 	return eval(code, {"__builtins__": {}}, locals)

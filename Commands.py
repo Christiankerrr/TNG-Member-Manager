@@ -202,13 +202,11 @@ async def edit_event(ctx, eventName, attrName, newDataStr):
 
 	newData = Functions.sanitary_eval(newDataStr, locals = {"var": eventAttrs[attrName]})
 
-	try:
+	if attrName in ("start", "end"):
 
-		DB_Manage.edit_attr("events", eventName, attrName, newData)
+		pass
 
-	except Exception as error:
-
-		await ctx.send(error)
+	DB_Manage.edit_attr("events", eventName, attrName, newData)
 
 	# 	if updateEvent(eventName, attrName, newData) == True:
 	# 		await ctx.send("Event data successfully changed")
