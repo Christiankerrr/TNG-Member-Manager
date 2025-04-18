@@ -6,13 +6,14 @@ import pymysql
 from time import time as time_now
 
 # Establish connection
+# UPDATE MYSQL PASSWORD HERE
 # OUTPUT: database and cursor
 def get_connection():
     try:
         tngDB = pymysql.connect(
             host="localhost",
             user="root",
-            password="MANunited1!1!1!",
+            password="se300",
             database="memberdb"
         )
         return tngDB, tngDB.cursor()
@@ -20,6 +21,7 @@ def get_connection():
         return None, None
 
 # Create new database
+# UPDATE MYSQL PASSWORD HERE
 def create_database():
     error = None
     tngDB = None
@@ -28,7 +30,7 @@ def create_database():
         tngDB = pymysql.connect(
             host="localhost",
             user="root",
-            password="MANunited1!1!1!"
+            password="se300"
         )
         cursor = tngDB.cursor()
         cursor.execute("SHOW DATABASES")
@@ -76,6 +78,7 @@ def create_database():
             raise error
 
 # Delete database
+# UPDATE MYSQL PASSWORD HERE
 # INPUT: name of database
 def delete_database(dbName):
     error = None
@@ -91,7 +94,7 @@ def delete_database(dbName):
         cursor.execute("SHOW DATABASES")
         databases = [db[0].lower() for db in cursor.fetchall()]
         if dbName.lower() in databases:
-            cursor.execute(f"DROP DATABASE `{dbName}`")
+            cursor.execute(f"DROP DATABASE {dbName}")
             tngDB.commit()
         else:
             error = Exception(f"Database '{dbName}' does not exist.")
@@ -142,13 +145,16 @@ def write_member(memberID, newTag, name, diet=None, size=None, cut=None,
             raise error
 
 # Add an event to the event table
-# INPUT: title, all other values can be defaults
+# INPUT: title and isMeeting, all other values can be defaults
 def write_event(title, isMeeting, start=None, end=None, duration=0, attendees=""):
     tngDB, cursor = get_connection()
     error = None
     if not tngDB or not cursor:
         error = Exception("Database connection error.")
     try:
+        if start is not None and end is not None and end <= start:
+            error = Exception("End time must be after start time.")
+
         query = """
             INSERT INTO events (title, start, end, duration, attendees, isMeeting) 
             VALUES (%s, %s, %s, %s, %s, %s)
@@ -206,7 +212,7 @@ def remove_event(eventName):
 
 # Edit the attributes of a member or event
 # INPUT: mode, attribute name, new attribute value
-def edit_attr(mode, recordIdentifier, attrName, newAttrVal):
+def edit_attr(mode, recordIdentifier, attrName, newAttrVal, forceEdit=False):
     tngDB, cursor = get_connection()
     error = None
     if not tngDB or not cursor:
@@ -214,14 +220,52 @@ def edit_attr(mode, recordIdentifier, attrName, newAttrVal):
     try:
         if attrName in ["diet", "attendees"] and isinstance(newAttrVal, list):
             newAttrVal = str(newAttrVal)
+        if mode not in ["members", "events"]:
+            error = Exception("Invalid mode. Must be 'members' or 'events'.")
+        if attrName == "isMeeting":
+            error = Exception("Cannot modify 'isMeeting' attribute.")
+        if attrName == "duration" and not forceEdit:
+            error = Exception("Cannot modify 'duration' unless forceEdit is True.")
 
-        id_column = "id" if mode == "members" else "title"
-        cursor.execute(f"DESCRIBE {mode}")
+        # Determine search column based on identifier type
+        if mode == "members":
+            if isinstance(recordIdentifier, int):
+                searchColumn = "id"
+            else:
+                searchColumn = "tag"
+            table = "members"
+        else:
+            searchColumn = "title"
+            table = "events"
+
+        # Special case: If editing tag, we need to verify new tag doesn't exist
+        if mode == "members" and attrName == "tag":
+            cursor.execute("SELECT COUNT(*) FROM members WHERE tag = %s", (newAttrVal,))
+            if cursor.fetchone()[0] > 0:
+                error = Exception(f"Tag '{newAttrVal}' already exists")
+
+        if mode == "events" and attrName == "end":
+            cursor.execute("SELECT start FROM events WHERE title = %s", (recordIdentifier,))
+            startTime = cursor.fetchone()
+            if startTime and startTime[0] and newAttrVal <= startTime[0]:
+                raise ValueError("End time must be after start time")
+
+        if mode == "events" and not forceEdit:
+            cursor.execute(f"SELECT isMeeting FROM {table} WHERE title = %s", (recordIdentifier,))
+            isMeeting = cursor.fetchone()
+            if isMeeting and isMeeting[0] == True and attrName == "end":
+                error = Exception("Cannot modify 'end' for a meeting unless forceEdit is True.")
+
+        cursor.execute(f"DESCRIBE {table}")
         columns = [row[0] for row in cursor.fetchall()]
         if attrName not in columns:
             error = Exception(f"Invalid attribute. Available attributes: {', '.join(columns)}")
+
+        if error:
+            raise error
+
         cursor.execute(
-            f"UPDATE {mode} SET {attrName} = %s WHERE {id_column} = %s",
+            f"UPDATE {table} SET {attrName} = %s WHERE {searchColumn} = %s",
             (newAttrVal, recordIdentifier)
         )
         tngDB.commit()
@@ -244,14 +288,36 @@ def get_attrs(mode, recordIdentifier):
     if not tngDB or not cursor:
         error = Exception("Database connection error.")
     try:
-        table = "members" if mode == "member" else "events"
-        id_column = "id" if mode == "member" else "title"
+        if mode == "members":
+            if isinstance(recordIdentifier, int):
+                searchColumn = "id"
+            else:
+                searchColumn = "tag"
+            table = "members"
+        else:
+            searchColumn = "title"
+            table = "events"
 
-        cursor.execute(f"SELECT * FROM {table} WHERE {id_column} = %s", (recordIdentifier,))
+        cursor.execute(f"SELECT * FROM {table} WHERE {searchColumn} = %s", (recordIdentifier,))
         result = cursor.fetchone()
         if result:
-            column_headers = [desc[0] for desc in cursor.description]
-            return dict(zip(column_headers, result))
+            columnHeaders = [desc[0] for desc in cursor.description]
+            recordDict = dict(zip(columnHeaders, result))
+
+            if mode == "members" and recordDict.get("diet"):
+                recordDict["diet"] = tuple(recordDict["diet"].split(','))
+
+            if mode == "events" and recordDict.get("attendees"):
+                attendees = recordDict["attendees"]
+                if attendees:
+                    recordDict["attendees"] = tuple(
+                        attendee.strip()
+                        for attendee in attendees.split(',')
+                        if attendee.strip()
+                    )
+                else:
+                    recordDict["attendees"] = tuple()
+            return recordDict
         error = Exception(f"No {mode} found with identifier: {recordIdentifier}")
     except Exception as err:
         error = err
@@ -280,7 +346,7 @@ def get_all_ids():
             raise error
 
 # Get sum of hours from all events
-# OUTPUT: string number of hours
+# OUTPUT: number of hours
 def get_total_hours():
     tngDB, cursor = get_connection()
     error = None
@@ -288,8 +354,8 @@ def get_total_hours():
         error = Exception("Database connection error.")
     try:
         cursor.execute("SELECT COALESCE(SUM(duration), 0) FROM events WHERE isMeeting = 0")
-        total_hours = cursor.fetchone()[0]
-        return total_hours
+        totalHours = cursor.fetchone()[0]
+        return totalHours
     except Exception as err:
         error = err
     finally:
@@ -299,7 +365,7 @@ def get_total_hours():
             raise error
 
 # Get total number of meetings
-# OUTPUT: string number of meetings
+# OUTPUT: number of meetings
 def get_total_meetings():
     tngDB, cursor = get_connection()
     error = None
@@ -307,8 +373,8 @@ def get_total_meetings():
         error = Exception("Database connection error.")
     try:
         cursor.execute("SELECT COUNT(*) FROM events WHERE isMeeting = 1")
-        totMeet = cursor.fetchone()[0]
-        return totMeet
+        totalMeetings = cursor.fetchone()[0]
+        return totalMeetings
     except Exception as err:
         error = err
     finally:
@@ -348,8 +414,8 @@ def print_table(mode):
         cursor.execute(f"SELECT * FROM {mode}")
         results = cursor.fetchall()
         if results:
-            column_headers = [desc[0] for desc in cursor.description]
-            output = ["\t".join(column_headers)]
+            columnHeaders = [desc[0] for desc in cursor.description]
+            output = ["\t".join(columnHeaders)]
             output.extend("\t".join(str(value) for value in row) for row in results)
             return "\n".join(output)
         return f"No records found in {mode}."
@@ -379,8 +445,8 @@ def can_sign_in(eventName):
         if not startTime or not endTime:
             return False
 
-        current_time = time_now()
-        return startTime <= current_time <= endTime
+        currentTime = time_now()
+        return startTime <= currentTime <= endTime
     except Exception as err:
         error = err
     finally:
@@ -420,22 +486,28 @@ def add_attend(eventName, memberID):
     if not tngDB or not cursor:
         error = Exception("Database connection error.")
     try:
+        cursor.execute("SELECT 1 FROM events WHERE title = %s", (eventName,))
+        if not cursor.fetchone():
+            raise Exception("Event not found.")
+
+        cursor.execute("SELECT 1 FROM members WHERE id = %s", (memberID,))
+        if not cursor.fetchone():
+            raise Exception("Member not found.")
+
         cursor.execute("SELECT attendees FROM events WHERE title = %s", (eventName,))
         result = cursor.fetchone()
-        if not result:
-            error = Exception("Event not found.")
+        attendees = result[0] if result and result[0] else ""
+        attendList = [str(x) for x in attendees.split(",")] if attendees else []
 
-        attendees = result[0]
-        attendList = attendees.split(",") if attendees else []
+        if str(memberID) in attendList:
+            raise Exception("Member is already an attendee.")
 
-        if memberID in attendList:
-            error = Exception("Member is already an attendee.")
-
-        attendList.append(memberID)
+        attendList.append(str(memberID))
         updatedAttend = ",".join(attendList)
-
-        cursor.execute("UPDATE events SET attendees = %s WHERE title = %s", (updatedAttend, eventName))
+        cursor.execute("UPDATE events SET attendees = %s WHERE title = %s",
+                       (updatedAttend, eventName))
         tngDB.commit()
+
     except Exception as err:
         error = err
     finally:
