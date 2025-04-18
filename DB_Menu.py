@@ -1,6 +1,6 @@
 # Touch-N-Go Member Manager
 # Adrian Fanjoy
-# Test cases
+# Test cases and add/delete
 
 import DB_Manage
 from time import time as time_now

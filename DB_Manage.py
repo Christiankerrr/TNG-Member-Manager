@@ -211,7 +211,7 @@ def remove_event(eventName):
             raise error
 
 # Edit the attributes of a member or event
-# INPUT: mode, attribute name, new attribute value
+# INPUT: mode, recordID (tag, ID, or name), attribute name, new attribute value
 def edit_attr(mode, recordIdentifier, attrName, newAttrVal, forceEdit=False):
     tngDB, cursor = get_connection()
     error = None
