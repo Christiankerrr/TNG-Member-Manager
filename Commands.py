@@ -115,18 +115,7 @@ async def events_active(context, *args):
 
     pass
 
-@bot.command()
-async def register(ctx):
-    embed = discord.Embed(
-        title="Event Title",
-        description="Meeting place and Time.",
-        color=discord.Color.blue()
-    )
-    embed.add_field(name="Food Poll", value="[Click here](https://google.com)", inline=False)
-    view = RegisterView()
-    await ctx.send(embed=embed, view=view)
-
-
+## Christian's Code
 @bot.command()
 async def surveyverify(ctx):
     embed = discord.Embed(
