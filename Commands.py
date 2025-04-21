@@ -144,3 +144,46 @@ async def register(ctx):
 
     await ctx.send(embed=embed, view=view)
 
+@bot.command()
+async def surveyverify(ctx):
+    embed = discord.Embed(
+        title="Welcome to the TNG Discord",
+        description="Click the button below to provide information for all TNG Events.",
+        color=discord.Color.blue()
+    )
+    await ctx.send(embed=embed, view=VerifyView())
+@bot.command()
+async def register(ctx):
+    embed = discord.Embed(
+        title="Event Title",
+        description="Meeting place and Time.",
+        color=discord.Color.blue()
+    )
+    embed.add_field(name="Food Poll", value="[Click here](https://google.com)", inline=False)
+    view = RegisterView()
+    await ctx.send(embed=embed, view=view)
+
+@bot.command()
+async def attend(ctx, *, event_name: str):
+    try:
+        attrs = DB_Manage.get_attrs("events", event_name)
+    except Exception:
+        return await ctx.send(f"Event `{event_name}` not found.")
+
+    embed = discord.Embed(
+        title=attrs["title"],
+        color=discord.Color.blue()
+    )
+    embed.add_field(
+        name="Instructions",
+        value="Click **ATTEND** to register.",
+        inline=False
+    )
+    embed.add_field(
+        name="🍽️ Food Poll",
+        value="[Click here](https://google.com)",
+        inline=False
+    )
+
+    view = AttendView(event_name=attrs["title"])
+    await ctx.send(embed=embed, view=view)
