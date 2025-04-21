@@ -399,27 +399,28 @@ def test_add_attend():
 running = True
 
 # Menu
-while running:
-    print("1. Create database")
-    print("2. Delete database")
-    print("3. Test get_attrs function")
-    print("4. Test edit_attrs function")
-    print("5. Test add_attend function")
-    print("10. Exit")
-    choice = input("Choose from the options above:")
+if __name__ == "__main__":
+    while running:
+        print("1. Create database")
+        print("2. Delete database")
+        print("3. Test get_attrs function")
+        print("4. Test edit_attrs function")
+        print("5. Test add_attend function")
+        print("10. Exit")
+        choice = input("Choose from the options above:")
 
-    # Switch case
-    if choice == "1":
-        print(DB_Manage.create_database())
-    elif choice == "2":
-        print(DB_Manage.delete_database("memberdb"))
-    elif choice == "3":
-        test_get_attrs()
-    elif choice == "4":
-        test_edit_attr()
-    elif choice == "5":
-        test_add_attend()
-    elif choice == "10":
-        running = False
-    else:
-        print("Enter a valid choice.")
+        # Switch case
+        if choice == "1":
+            print(DB_Manage.create_database())
+        elif choice == "2":
+            print(DB_Manage.delete_database("memberdb"))
+        elif choice == "3":
+            test_get_attrs()
+        elif choice == "4":
+            test_edit_attr()
+        elif choice == "5":
+            test_add_attend()
+        elif choice == "10":
+            running = False
+        else:
+            print("Enter a valid choice.")

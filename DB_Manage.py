@@ -13,7 +13,7 @@ def get_connection():
         tngDB = pymysql.connect(
             host="localhost",
             user="root",
-            password="data1013$",
+            password="se300",
             database="memberdb"
         )
         return tngDB, tngDB.cursor()
@@ -30,7 +30,7 @@ def create_database():
         tngDB = pymysql.connect(
             host="localhost",
             user="root",
-            password="data1013$"
+            password="se300"
         )
         cursor = tngDB.cursor()
         cursor.execute("SHOW DATABASES")
@@ -88,7 +88,7 @@ def delete_database(dbName):
         tngDB = pymysql.connect(
             host="localhost",
             user="root",
-            password="data1013$"
+            password="se300"
         )
         cursor = tngDB.cursor()
         cursor.execute("SHOW DATABASES")
@@ -152,16 +152,20 @@ def write_event(title, isMeeting, start=None, end=None, duration=0, attendees=""
     if not tngDB or not cursor:
         error = Exception("Database connection error.")
     try:
+        cursor.execute("SELECT COUNT(*) FROM events WHERE title = %s", (title,))
+        if cursor.fetchone()[0] > 0:
+            error = Exception(f"Event with title '{title}' already exists.")
         if start is not None and end is not None and end <= start:
             error = Exception("End time must be after start time.")
 
-        query = """
-            INSERT INTO events (title, start, end, duration, attendees, isMeeting) 
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """
-        values = (title, start, end, duration, attendees, isMeeting)
-        cursor.execute(query, values)
-        tngDB.commit()
+        if error is None:
+            query = """
+                INSERT INTO events (title, start, end, duration, attendees, isMeeting) 
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """
+            values = (title, start, end, duration, attendees, isMeeting)
+            cursor.execute(query, values)
+            tngDB.commit()
     except Exception as err:
         error = err
     finally:
@@ -218,16 +222,23 @@ def edit_attr(mode, recordIdentifier, attrName, newAttrVal, forceEdit=False):
     if not tngDB or not cursor:
         error = Exception("Database connection error.")
     try:
-        if attrName in ["diet", "attendees"] and isinstance(newAttrVal, list):
-            newAttrVal = str(newAttrVal)
+        # Check if in tuple format
+        if attrName in ["diet", "attendees"] and isinstance(newAttrVal, tuple):
+            if len(newAttrVal) != len(set(newAttrVal)):
+                error = Exception(f"Duplicate entries found in {attrName}")
+            newAttrVal = ",".join(str(item) for item in newAttrVal)
+
+        # Check mode
         if mode not in ["members", "events"]:
             error = Exception("Invalid mode. Must be 'members' or 'events'.")
+
+        # Check for attributes that cannot be modified
         if attrName == "isMeeting":
             error = Exception("Cannot modify 'isMeeting' attribute.")
         if attrName == "duration" and not forceEdit:
             error = Exception("Cannot modify 'duration' unless forceEdit is True.")
 
-        # Determine search column based on identifier type
+        # Set search variable
         if mode == "members":
             if isinstance(recordIdentifier, int):
                 searchColumn = "id"
@@ -238,39 +249,38 @@ def edit_attr(mode, recordIdentifier, attrName, newAttrVal, forceEdit=False):
             searchColumn = "title"
             table = "events"
 
-        # Special case: If editing tag, we need to verify new tag doesn't exist
+        # Check to make sure tag is not duplicate
         if mode == "members" and attrName == "tag":
             cursor.execute("SELECT COUNT(*) FROM members WHERE tag = %s", (newAttrVal,))
             if cursor.fetchone()[0] > 0:
                 error = Exception(f"Tag '{newAttrVal}' already exists")
 
+        # Check to make sure end time is after start
         if mode == "events" and attrName == "end":
             cursor.execute("SELECT start FROM events WHERE title = %s", (recordIdentifier,))
             startTime = cursor.fetchone()
             if startTime and startTime[0] and newAttrVal <= startTime[0]:
-                raise ValueError("End time must be after start time")
+                error = Exception("End time must be after start time")
 
+        # Check that end time cannot be modified for meetings
         if mode == "events" and not forceEdit:
             cursor.execute(f"SELECT isMeeting FROM {table} WHERE title = %s", (recordIdentifier,))
             isMeeting = cursor.fetchone()
             if isMeeting and isMeeting[0] == True and attrName == "end":
                 error = Exception("Cannot modify 'end' for a meeting unless forceEdit is True.")
 
-        cursor.execute(f"DESCRIBE {table}")
-        columns = [row[0] for row in cursor.fetchall()]
-        if attrName not in columns:
-            error = Exception(f"Invalid attribute. Available attributes: {', '.join(columns)}")
-
-        if error:
-            raise error
-
-        cursor.execute(
-            f"UPDATE {table} SET {attrName} = %s WHERE {searchColumn} = %s",
-            (newAttrVal, recordIdentifier)
-        )
-        tngDB.commit()
-        if cursor.rowcount == 0:
-            error = Exception("No record found with the given identifier.")
+        if error is None:
+            cursor.execute(f"DESCRIBE {table}")
+            columns = [row[0] for row in cursor.fetchall()]
+            if attrName not in columns:
+                error = Exception(f"Invalid attribute. Available attributes: {', '.join(columns)}")
+            cursor.execute(
+                f"UPDATE {table} SET {attrName} = %s WHERE {searchColumn} = %s",
+                (newAttrVal, recordIdentifier)
+            )
+            tngDB.commit()
+            if cursor.rowcount == 0:
+                error = Exception("No record found with the given identifier.")
     except Exception as err:
         error = err
     finally:
@@ -280,7 +290,7 @@ def edit_attr(mode, recordIdentifier, attrName, newAttrVal, forceEdit=False):
             raise error
 
 # Get attributes for member or event
-# INPUT: member ID
+# INPUT: recordID (tag, ID, or name)
 # OUTPUT: dictionary with record info
 def get_attrs(mode, recordIdentifier):
     tngDB, cursor = get_connection()
