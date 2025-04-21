@@ -1,24 +1,36 @@
 import discord
-from discord.ext import commands
 
-from Commands import bot
+class SignInOutView(discord.ui.View):
 
-@bot.command()
-async def register(ctx):
+    def __init__(self):
+
+        super().__init__(timeout = None)
+
+    @discord.ui.button(label = "Sign In", style = discord.ButtonStyle.green)
+    async def sign_in_member(self, interaction, button):
+
+        await interaction.response.send_message("Signed in!", ephemeral = True)
+
+    @discord.ui.button(label = "Sign Out", style = discord.ButtonStyle.red)
+    async def sign_out_member(self, interaction, button):
+
+        await interaction.response.send_message("Signed out!", ephemeral = True)
+
+async def sign_in_out(ctx, eventName, startTimeStr):
 
     embed = discord.Embed(
-        title="Registration For 'Add Variable for events here'",
-        color=discord.Color.blue()
+        title = f"{eventName} Has Started!",
+        color = discord.Color.blue()
     )
-    embed.add_field(name="**Meeting Area**", value="Blank", inline=False)
-    embed.add_field(name="**Need help?**", value="[Message Blank](https://google.com)", inline=False)
+    embed.add_field(
+        name = "**Event Start Time:**",
+        value = startTimeStr,
+        inline = False
+    )
+    embed.add_field(
+        name = "**Need help?**",
+        value = "DM the Organizational Director",
+        inline = False
+    )
 
-    view = discord.ui.View()
-    sign_in = discord.ui.Button(label="Sign in", style=discord.ButtonStyle.link, url="https://google.com")
-    sign_out = discord.ui.Button(label="Sign Out", style=discord.ButtonStyle.link,
-                                       url="https://google.com")
-
-    view.add_item(sign_in)
-    view.add_item(sign_out)
-
-    await ctx.send(embed=embed, view=view)
+    await ctx.send(embed = embed, view = SignInOutView())
