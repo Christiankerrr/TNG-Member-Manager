@@ -2,7 +2,7 @@ import discord
 import pymysql
 import DB_Manage
 from Member import Member
-from UI import VerifyView, send_diet, send_shirt_size, finish_survey
+from UI import VerifyView,RegisterView,AttendView
 
 from Bot import BotClient
 
