@@ -68,7 +68,6 @@ class BotClient (commands.Bot):
 		self.strip_after_prefix = True
 
 		self.tngServerID = 1014692801281273868
-		self.dateTimeFmt = "%m/%d/%Y %I:%M %p"
 
 	async def on_ready(self):
 

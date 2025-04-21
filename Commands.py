@@ -12,6 +12,7 @@ from datetime import datetime
 
 import DB_Manage
 import Functions
+import UI
 
 bot = BotClient(command_prefix = "?", intents = discord.Intents.all())
 
@@ -108,16 +109,11 @@ async def start_event(ctx, eventName, startTimeStr = None):
 
 	else:
 
-		startTime = to_secs(parse_time_str(startTimeStr, bot.dateTimeFmt))
+		startTime = Functions.str_to_secs(startTimeStr)
 	
 	print(DB_Manage.write_event(title = eventName, isMeeting = 0, start = startTime))
 
-	# # Call UI function to end event registration function
-	# ui_func_EndRegistration()
-	await ctx.send("Event registration has ended, thank you for your responses!")
-	# # Call UI function to start an event with the sign in/out buttons
-	# ui_func_StartEvent(eventName)
-	await ctx.send(eventName + " has begun! Have a great time everyone!")
+	await UI.sign_in_out(ctx, eventName, Functions.secs_to_str(startTime))
 
 ## Start Meeting
 @bot.command()
@@ -128,7 +124,7 @@ async def start_meeting(ctx, startTimeStr = None):
 	if startTimeStr is None:
 		startTime = time_now()
 	else:
-		startTime = to_secs(parse_time_str(startTimeStr, bot.dateTimeFmt))
+		startTime = Functions.str_to_secs(startTimeStr)
 
 	endTime = startTime + (60 * 60) # Standard 1-hour event
 	duration = endTime - startTime
@@ -159,7 +155,7 @@ async def end_event(ctx, eventName, endTimeStr = None):
 	if endTimeStr is None:
 		endTime = time_now()
 	else:
-		endTime = to_secs(parse_time_str(endTimeStr, bot.dateTimeFmt))
+		endTime = Functions.str_to_secs(endTimeStr)
 
 	DB_Manage.edit_attr("events", eventName, "end", endTime)
 	DB_Manage.edit_attr("events", eventName, "duration", endTime - startTime)
