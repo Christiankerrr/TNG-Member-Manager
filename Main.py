@@ -3,6 +3,7 @@
 #
 # pip.main(["install", "discord", "pymysql"])
 
+# import os
 import os
 import time
 
@@ -12,10 +13,5 @@ from Member import Member
 
 if __name__ == "__main__":
 
-	bot.run("BotToken")
-	
-# with open("Token.txt") as file:
-#
-# 	token = file.readline()
-# 	bot.run(token)
 
+	bot.run("BOtToken")

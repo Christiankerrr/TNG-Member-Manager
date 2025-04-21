@@ -15,38 +15,33 @@ import pymysql
 # Establish connection
 # OUTPUT: database and cursor
 def get_connection():
-	try:
-
-		tngDB = pymysql.connect(
-			host = "localhost",
-			user = "root",
-			password = "se300",
-			database = "memberdb"
-		)
-
-		return tngDB, tngDB.cursor()
-
-	except pymysql.MySQLError as err:
-
-		print(f"Database Connection Error: {err}")
-
-		return None, None
+    try:
+        tngDB = pymysql.connect(
+            host="localhost",
+            user="root",
+            password="MANunited1!1!1!",
+            database="memberdb"
+        )
+        return tngDB, tngDB.cursor()
+    except pymysql.MySQLError as err:
+        return None, None
 
 # Create new database
 def create_database():
-	try:
-
-		# Connect to MySQL server
-		tngDB = pymysql.connect(
-			host = "localhost",
-			user = "root",
-			password = "se300"
-		)
-		cursor = tngDB.cursor()
-
-		# Check if database exists
-		cursor.execute("SHOW DATABASES")
-		databases = [db[0].lower() for db in cursor.fetchall()]
+    error = None
+    tngDB = None
+    cursor = None
+    try:
+        tngDB = pymysql.connect(
+            host="localhost",
+            user="root",
+            password="MANunited1!1!1!"
+        )
+        cursor = tngDB.cursor()
+        cursor.execute("SHOW DATABASES")
+        databases = [db[0].lower() for db in cursor.fetchall()]
+        if "memberdb" in databases:
+            raise Exception("Database 'memberdb' already exists.")
 
 		if "memberdb" not in databases:
 			cursor.execute("CREATE DATABASE memberdb")
@@ -84,33 +79,68 @@ def create_database():
                 attendees TEXT
             )
         """)
+    except Exception as err:
+        error = err
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if tngDB is not None:
+            tngDB.close()
+        if error is not None:
+            raise error
 
-		print("Tables created successfully")
+# Delete database
+# UPDATE MYSQL PASSWORD HERE
+# INPUT: name of database
+def delete_database(dbName):
+    error = None
+    tngDB = None
+    cursor = None
+    try:
+        tngDB = pymysql.connect(
+            host="localhost",
+            user="root",
+            password="MANunited1!1!1!"
+        )
+        cursor = tngDB.cursor()
+        cursor.execute("SHOW DATABASES")
+        databases = [db[0].lower() for db in cursor.fetchall()]
+        if dbName.lower() in databases:
+            cursor.execute(f"DROP DATABASE {dbName}")
+            tngDB.commit()
+        else:
+            error = Exception(f"Database '{dbName}' does not exist.")
+    except Exception as err:
+        error = err
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if tngDB is not None:
+            tngDB.close()
+        if error is not None:
+            raise error
 
-	except pymysql.MySQLError as err:
-
-		print(f"Error: {err}")
-
-# Add a member
-# INPUT: Member object
-def write_member(newMember):
-	tngDB, cursor = get_connection()
-	if not tngDB or not cursor:
-		return
-
-	try:
-
-		# Check if member already exists by ID or tag
-		cursor.execute("SELECT COUNT(*) FROM members WHERE id = %s OR tag = %s",
-		               (newMember.discordID, newMember.discordTag))
-		if cursor.fetchone()[0] > 0:
-			print(f"Member with ID {newMember.id} or Tag {newMember.tag} already exists.")
-			return
-
-		# Proceed with adding the member if not already in database
-		query = """
-            INSERT INTO members (id, tag, nme, diet, sze, cut, pos, points_spent, coupons, meetings, hours, is_active, is_trained) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+# Add a member to the member database
+# INPUT: id, tag, name, other values can be defaults
+def write_member(memberID, newTag, name, diet=None, size=None, cut=None,
+                 position="Member", points_spent=0, coupons=0,
+                 meetings=0, hours=0, is_trained=False):
+    tngDB, cursor = get_connection()
+    error = None
+    if not tngDB or not cursor:
+        error = Exception("Database connection error.")
+    try:
+        cursor.execute(
+            "SELECT COUNT(*) FROM members WHERE id = %s OR tag = %s",
+            (memberID, newTag)
+        )
+        if cursor.fetchone()[0] > 0:
+            error = Exception(f"Member with ID {memberID} or Tag {newTag} already exists.")
+        query = """
+            INSERT INTO members (
+                id, tag, name, diet, size, cut, pos, points_spent,
+                coupons, meetings, hours, is_active, is_trained
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 1, %s)
         """
 		values = (
 			newMember.discordID, newMember.discordTag, newMember.name, newMember.diet,

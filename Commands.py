@@ -1,12 +1,20 @@
 import discord
 import pymysql
-import DB_Manage
+
+from UI import VerifyView,RegisterView,AttendView
 from Member import Member
 from UI import VerifyView, send_diet, send_shirt_size, finish_survey
 
 from Bot import BotClient
+from time import time as time_now, strftime as format_time_str, localtime as to_time_struct, strptime as parse_time_str, mktime as to_secs
+from datetime import datetime
 
-bot = BotClient(command_prefix="?", intents=discord.Intents.all())
+from UI import VerifyView,RegisterView,AttendView
+
+import DB_Manage
+import Functions
+
+bot = BotClient(command_prefix = "?", intents = discord.Intents.all())
 
 @bot.command()
 async def print_db(ctx):
@@ -35,64 +43,183 @@ async def write_member(ctx, arg1, arg2, arg3):
 
 ##Edit User Data Command
 @bot.command()
-async def edit_data(ctx, arg1, arg2, arg3):
+async def start_registration(ctx, eventName, link):
 
-    memberTag = arg1
-    attrName = arg2
-    newData = arg3
+	print(DB_Manage.write_event(title = eventName, isMeeting = 0, start = None))
 
-    #*#* Need to utilize the get_connection() function to establish connection to MySQL
+	try:
+		attrs = DB_Manage.get_attrs("events", eventName)
+	except Exception:
+		return await ctx.send(f"Event `{eventName}` not found.")
+	
 
-        # tngDB, cursor = get_connection()
-        # updateDatabase(memberID, infoType, newData)
-        # if updateDatabe = true:
-        # 	await context.send(memberID + "'s" + infoType + " is now set to " + newData)
-        # else:
-        # 	await context.send("Manual data change failed, please try again.")
+	embed = discord.Embed(
+        title=attrs["title"],
+        color=discord.Color.blue()
+    )
+	embed.add_field(
+        name="Instructions",
+        value="Click **ATTEND** to register.",
+        inline=False
+    )
+	embed.add_field(
+        name="🍽️ Food Poll",
+        value="[Click here](https://google.com)",
+        inline=False
+    )
+	
+	view = AttendView(event_name=attrs["title"])
+	await ctx.send(embed=embed, view=view)
 
-    pass
+## Start Event
+@bot.command()
+async def start_event(ctx, eventName, startTimeStr = None):
 
-##Multi-argument Ping-Pong example w/ ChatGPT [Don't need, just to help visualize multiple arguments]
-# @bot.command()
-# async def ping(ctx, *args):
-#     if not args:  # If no arguments are provided
-#         await ctx.send("❗ Please provide at least one argument (fast, slow, normal).")
-#         return
+	if startTimeStr is None:
 
-#     async def send_pong(arg):
-#         arg = arg.lower()
-#         if arg == "fast":
-#             await ctx.send("⚡ Fast Pong!")
-#         elif arg == "slow":
-#             await ctx.send("🐢 Slow Pong...")
-#         elif arg == "normal":
-#             await ctx.send("🏓 Regular Pong!")
-#         else:
-#             await ctx.send("❓ Unknown Pong Type")
+		startTime = time_now()
 
-#     # Send a response for each argument
-#     for arg in args:
-#         await send_pong(arg)
+	else:
+
+		startTime = to_secs(parse_time_str(startTimeStr, bot.dateTimeFmt))
+	
+	print(DB_Manage.write_event(title = eventName, isMeeting = 0, start = startTime))
+
+	embed = discord.Embed(
+        title=eventName,
+        color=discord.Color.blue()
+    )
+	embed.add_field(name="Event Time",value=startTime,inline=False)
+	embed.add_field(name="Need Help?",value="DM The Organization Director",inline=False)
+	view = RegisterView()
+	await ctx.send(embed=embed, view=view)
 
 ##Start Event Command
 @bot.command()
-async def eventStart(context, arg1): ##Separate need names of special events
+async def start_meeting(ctx, startTimeStr = None):
 
-    eventType = arg1
+	meetingName = format_time_str("Member Meeting %m/%d/%Y", to_time_struct())
 
-    #*#* Utilize the UI function *startEvent" to start an event with the sign in/out buttons
+	if startTimeStr is None:
+		startTime = time_now()
+	else:
+		startTime = to_secs(parse_time_str(startTimeStr, bot.dateTimeFmt))
 
-    # if eventType == "regular":
-    # 	startEvent(eventType)
-    # 	pass
-    # elif eventType == "special":
-    # 	startEvent(eventType)
-    # 	pass
-    # else:
-    # 	await context.send("Unknown event type, please enter another command or try again")
-    pass
+	endTime = startTime + (60 * 60) # Standard 1-hour event
+	duration = endTime - startTime
 
-# ##End Event Command
+	DB_Manage.write_event(title = meetingName, isMeeting = 1, start = startTime, end = endTime, duration = duration)
+
+	embed = discord.Embed(
+        title=meetingName,
+        color=discord.Color.blue()
+    )
+	embed.add_field(name="Meeting Time",value=startTime,inline=False)
+	embed.add_field(name="Need Help?",value="DM The Organization Director",inline=False)
+	view = RegisterView()
+	await ctx.send(embed=embed, view=view)
+
+	await ctx.send("Welcome to the meeting everyone! Please sign in at your earliest convenience.")
+
+## End Event Command
+@bot.command()
+async def end_event(ctx, eventName, endTimeStr = None):
+
+	eventAttrs = DB_Manage.get_attrs("events", eventName)
+
+	if eventAttrs["isMeeting"] == 1:
+
+		await ctx.send("Can not end a meeting.")
+		return
+
+	startTime = eventAttrs["start"]
+	if startTime is None:
+
+		await ctx.send("Can not end an event that has not started.")
+		return
+
+	if endTimeStr is None:
+		endTime = time_now()
+	else:
+		endTime = to_secs(parse_time_str(endTimeStr, bot.dateTimeFmt))
+
+	DB_Manage.edit_attr("events", eventName, "end", endTime)
+	DB_Manage.edit_attr("events", eventName, "duration", endTime - startTime)
+	# Call UI function to conclude event
+	# ui_func_EndEvent()
+	await ctx.send("The current event has concluded.")
+
+## Show Profile
+@bot.command()
+async def show_profile(ctx, memberTag):
+
+	member = await commands.MemberConverter().convert(ctx, memberTag)
+
+	# Call UI function to display profile
+	# ui_func_DisplayProfile(memberID)
+
+## Manually Change Data
+@bot.command()
+async def edit_member(ctx, memberTag, attrName, newDataStr):
+
+	member = await commands.MemberConverter().convert(ctx, memberTag)
+
+	memberAttrs = DB_Manage.get_attrs("members", member.id)
+
+	newData = Functions.sanitary_eval(newDataStr, locals = {"var": memberAttrs[attrName]})
+
+	DB_Manage.edit_attr("members", member.id, attrName, newData)
+	# Call MySQL function to update member databse with given parameters
+
+	# if DB_Manage.edit_attr(memberTag.id, attrName, newData) == True:
+	# 	await ctx.send("Data successfully changed to " + newData)
+	# else:
+	# 	await ctx.send("Manual data change failed, please try again.")
+
+## Edit Event
+@bot.command()
+async def edit_event(ctx, eventName, attrName, newDataStr):
+
+	eventAttrs = DB_Manage.get_attrs("events", eventName)
+
+	newData = Functions.sanitary_eval(newDataStr, locals = {"var": eventAttrs[attrName]})
+
+	try:
+
+		DB_Manage.edit_attr("events", eventName, attrName, newData)
+
+	except Exception as error:
+
+		await ctx.send(error)
+
+	# 	if updateEvent(eventName, attrName, newData) == True:
+	# 		await ctx.send("Event data successfully changed")
+	# 	else:
+	# 		await ctx.send("Data change failed, please try again.")
+
+	# 	if updateEvent(eventName, attrName, newData) == True:
+	# 		await ctx.send("Event data successfully changed")
+	# 	else:
+	# 		await ctx.send("Data change failed, please try again.")
+
+## Delete Member
+@bot.command()
+async def delete_member(ctx, memberID):
+
+	# memberID = await commands.MemberConverter().convert(ctx, memberTag)
+
+	# Call MySQL function to delete member
+	DB_Manage.remove_member(memberID)
+
+## Delete Event
+@bot.command()
+async def delete_event(ctx, eventName):
+
+	# Call MySQL function to delete event
+	DB_Manage.remove_event(eventName)
+
+
+## Display All Commands
 # @bot.command()
 # async def eventEnd(context, arg1):
 
