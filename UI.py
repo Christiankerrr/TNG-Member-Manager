@@ -238,7 +238,7 @@ async def finish_survey(interaction: discord.Interaction):
 sign_in_times = {}
 
 class RegisterView(discord.ui.View):
-    def __init__(self, timeout: float = 3600):
+    def __init__(self, timeout: float = None):
         super().__init__(timeout=timeout)
 
     @discord.ui.button(label="Sign In", style=discord.ButtonStyle.success)
@@ -290,7 +290,7 @@ class MemberView(discord.ui.View):
             ephemeral=True
         )
 class AttendView(discord.ui.View):
-    def __init__(self, event_name: str, timeout: float = 3600):
+    def __init__(self, event_name: str, timeout: float = None):
         super().__init__(timeout=timeout)
         self.event_name = event_name
 
