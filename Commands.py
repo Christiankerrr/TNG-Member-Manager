@@ -3,7 +3,7 @@ import pymysql
 
 from UI import VerifyView,RegisterView,AttendView
 from Member import Member
-from UI import VerifyView, send_diet, send_shirt_size, finish_survey
+from UI import VerifyView,RegisterView,AttendView
 
 from Bot import BotClient
 from time import time as time_now, strftime as format_time_str, localtime as to_time_struct, strptime as parse_time_str, mktime as to_secs
@@ -242,6 +242,7 @@ async def events_active(context, *args):
 
     pass
 
+## Christian's Code
 @bot.command()
 async def surveyverify(ctx):
     embed = discord.Embed(
@@ -250,24 +251,38 @@ async def surveyverify(ctx):
         color=discord.Color.blue()
     )
     await ctx.send(embed=embed, view=VerifyView())
-
 @bot.command()
 async def register(ctx):
-
     embed = discord.Embed(
-        title="Registration For 'Add Variable for events here'",
+        title="Event Title",
+        description="Meeting place and Time.",
         color=discord.Color.blue()
     )
-    embed.add_field(name="**Meeting Area**", value="Blank", inline=False)
-    embed.add_field(name="**Need help?**", value="[Message Blank](https://google.com)", inline=False)
-
-    view = discord.ui.View()
-    sign_in = discord.ui.Button(label="Sign in", style=discord.ButtonStyle.link, url="https://google.com")
-    sign_out = discord.ui.Button(label="Sign Out", style=discord.ButtonStyle.link,
-                                       url="https://google.com")
-
-    view.add_item(sign_in)
-    view.add_item(sign_out)
-
+    embed.add_field(name="Food Poll", value="[Click here](https://google.com)", inline=False)
+    view = RegisterView()
     await ctx.send(embed=embed, view=view)
 
+@bot.command()
+async def attend(ctx, *, event_name: str):
+    try:
+        attrs = DB_Manage.get_attrs("events", event_name)
+    except Exception:
+        return await ctx.send(f"Event `{event_name}` not found.")
+
+    embed = discord.Embed(
+        title=attrs["title"],
+        color=discord.Color.blue()
+    )
+    embed.add_field(
+        name="Instructions",
+        value="Click **ATTEND** to register.",
+        inline=False
+    )
+    embed.add_field(
+        name="🍽️ Food Poll",
+        value="[Click here](https://google.com)",
+        inline=False
+    )
+
+    view = AttendView(event_name=attrs["title"])
+    await ctx.send(embed=embed, view=view)

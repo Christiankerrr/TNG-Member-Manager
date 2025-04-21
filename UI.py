@@ -2,7 +2,7 @@ import discord
 import DB_Manage
 import time
 from discord.ext import commands
-# from Member import Member
+from Member import Member
 
 user_responses = {}
 
@@ -296,7 +296,7 @@ class AttendView(discord.ui.View):
 
     @discord.ui.button(label="Attend", style=discord.ButtonStyle.success)
     async def attend(self, interaction: discord.Interaction, button: discord.ui.Button):
-        user_id = interaction.user.display_name
+        user_id = str(interaction.user.id)
         try:
             DB_Manage.add_attend(self.event_name, user_id)
             await interaction.response.send_message(
@@ -305,3 +305,5 @@ class AttendView(discord.ui.View):
             )
         except Exception as e:
             await interaction.response.send_message(f"{e}", ephemeral=True)
+
+
