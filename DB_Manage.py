@@ -19,7 +19,7 @@ def get_connection():
         tngDB = pymysql.connect(
             host="localhost",
             user="root",
-            password="MANunited1!1!1!",
+            password="",
             database="memberdb"
         )
         return tngDB, tngDB.cursor()
@@ -35,7 +35,7 @@ def create_database():
         tngDB = pymysql.connect(
             host="localhost",
             user="root",
-            password="MANunited1!1!1!"
+            password=""
         )
         cursor = tngDB.cursor()
         cursor.execute("SHOW DATABASES")
@@ -100,7 +100,7 @@ def delete_database(dbName):
         tngDB = pymysql.connect(
             host="localhost",
             user="root",
-            password="MANunited1!1!1!"
+            password=""
         )
         cursor = tngDB.cursor()
         cursor.execute("SHOW DATABASES")
