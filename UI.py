@@ -238,23 +238,22 @@ async def finish_survey(interaction: discord.Interaction):
 sign_in_times = {}
 
 class RegisterView(discord.ui.View):
-    def __init__(self, timeout: float = 3600):
+    def __init__(self, event_name: str, timeout: float = 3600):
         super().__init__(timeout=timeout)
+        self.event_name = event_name
 
     @discord.ui.button(label="Sign In", style=discord.ButtonStyle.success)
     async def sign_in(self, interaction: discord.Interaction, button: discord.ui.Button):
         user_id = str(interaction.user.id)
-        if user_id in sign_in_times:
+        try:
+            DB_Manage.add_attend(self.event_name, user_id)
             await interaction.response.send_message(
-                "You are already signed in. Please sign out before signing in again.",
+                f"You’ve signed into **{self.event_name}**",
                 ephemeral=True
             )
-        else:
-            sign_in_times[user_id] = time.time()  # Record sign in timestamp
-            await interaction.response.send_message(
-                "You've signed in. Your sign-in time has been recorded.",
-                ephemeral=True
-            )
+        except Exception as e:
+            await interaction.response.send_message(f"{e}", ephemeral=True)
+
 
     @discord.ui.button(label="Sign Out", style=discord.ButtonStyle.danger)
     async def sign_out(self, interaction: discord.Interaction, button: discord.ui.Button):

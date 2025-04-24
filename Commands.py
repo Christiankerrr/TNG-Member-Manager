@@ -1,10 +1,8 @@
 import discord
 import pymysql
 
-from UI import VerifyView,RegisterView,AttendView
 from Member import Member
-from UI import VerifyView,RegisterView,AttendView
-
+from discord.ext import commands
 from Bot import BotClient
 from time import time as time_now, strftime as format_time_str, localtime as to_time_struct, strptime as parse_time_str, mktime as to_secs
 from datetime import datetime
@@ -13,63 +11,94 @@ from UI import VerifyView,RegisterView,AttendView
 
 import DB_Manage
 import Functions
+import UI
 
 bot = BotClient(command_prefix = "?", intents = discord.Intents.all())
 
+## Command Key: -> C = Complete, U = Untested, I = Incomplete
+	## print database --- C
+	## write member to db --- C
+	## get member status --- U
+	## start event registration --- U
+	## start event (auto end registration) --- U
+	## start meeting --- U
+	## end event/meeting --- U
+	## show profile --- U
+	## show leaderboard --- I
+	## manually edit data --- U
+	## display all commands --- I
+	## edit event - by event name --- U
+	## edit meeting (perform any logic necessary: start time, end time) --- U
+	## delete member --- U
+	## delete event --- U
+
+	## extra dm to admin to verify sign in?
+
+
+## Before Invoke
+# Meant to add anyone not currently in the DB to the DB
+# Additionally check permissions??
+@bot.before_invoke
+async def before_command(context):
+
+	await bot.wait_until_ready()
+	if not DB_Manage.locate_member(context.author.id):
+		DB_Manage.write_member(context.author.id, context.author, context.author.display_name)
+#
+# 	# if not isinstance(bot.userDB[context.author.id], context.command.permissions):
+#     #     await context.send(f"Sorry, you don't have the valid permissions to run that command. This command can only be run by Bot {context.command.permissions.ranking}s and above.")
+
+
+## Print Databases
 @bot.command()
-async def print_db(ctx):
+async def show_members(ctx):
 
-    await ctx.send(DB_Manage.print_members())
-    pass
-
-@bot.command()
-async def member_status(ctx, arg1):
-
-    ctx.author.ID = arg1
-    await ctx.send(DB_Manage.get_status(ctx.author.ID))
-    pass
+	await ctx.send(DB_Manage.print_table("members"))
 
 @bot.command()
-async def write_member(ctx, arg1, arg2, arg3):
+async def shit_pants(ctx):
 
-    # make it take just the id -> use discord.py to get tag and name
-    ID = arg1
-    tag = arg2
-    name = arg3
+	raise Exception("NOOOOOOOOO")
 
-    newMember = Member(ID, tag, name)
-    DB_Manage.write_member(newMember)
-
-
-##Edit User Data Command
 @bot.command()
-async def start_registration(ctx, eventName, link):
+async def show_events(ctx):
 
-	print(DB_Manage.write_event(title = eventName, isMeeting = 0, start = None))
+	await ctx.send(DB_Manage.print_table("events"))
 
+## Write Member to Database
+@bot.command()
+async def write_member(ctx, memberID, memberTag, memberName):
+
+	DB_Manage.write_member(memberID, memberTag, memberName)
+
+## Untested Commands
+
+## Start Event Registration 
+@bot.command()
+async def start_registration(ctx, eventName, link, startTimeStr = None):
+
+	if startTimeStr is None:
+
+		startTime = time_now()
+
+	else:
+
+		startTime = Functions.str_to_secs(startTimeStr)
+
+	print(DB_Manage.write_event(title = eventName, isMeeting = 0, start = startTime))
+ 
 	try:
 		attrs = DB_Manage.get_attrs("events", eventName)
 	except Exception:
-		return await ctx.send(f"Event `{eventName}` not found.")
-	
-
-	embed = discord.Embed(
-        title=attrs["title"],
-        color=discord.Color.blue()
-    )
-	embed.add_field(
-        name="Instructions",
-        value="Click **ATTEND** to register.",
-        inline=False
-    )
-	embed.add_field(
-        name="🍽️ Food Poll",
-        value="[Click here](https://google.com)",
-        inline=False
-    )
-	
+ 		return await ctx.send(f"Event `{eventName}` not found.")
+ 	
+	embed = discord.Embed(title=attrs["title"],color=discord.Color.blue())
+	embed.add_field(name="Instructions",value="Click **ATTEND** to register.",inline=False)
+	embed.add_field(name="🍽️ Food Poll",value="[Click here](https://google.com)",inline=False)
+ 	
 	view = AttendView(event_name=attrs["title"])
 	await ctx.send(embed=embed, view=view)
+
 
 ## Start Event
 @bot.command()
@@ -81,42 +110,47 @@ async def start_event(ctx, eventName, startTimeStr = None):
 
 	else:
 
-		startTime = to_secs(parse_time_str(startTimeStr, bot.dateTimeFmt))
+		startTime = Functions.str_to_secs(startTimeStr)
 	
 	print(DB_Manage.write_event(title = eventName, isMeeting = 0, start = startTime))
 
-	embed = discord.Embed(
-        title=eventName,
-        color=discord.Color.blue()
-    )
+	try:
+		attrs = DB_Manage.get_attrs("events", eventName)
+	except Exception:
+ 		return await ctx.send(f"Event `{eventName}` not found.")
+	# await UI.sign_in_out(ctx, eventName, Functions.secs_to_str(startTime))
+
+	embed = discord.Embed(title=eventName,color=discord.Color.blue())
 	embed.add_field(name="Event Time",value=startTime,inline=False)
 	embed.add_field(name="Need Help?",value="DM The Organization Director",inline=False)
-	view = RegisterView()
+	view = RegisterView(event_name=attrs["title"])
 	await ctx.send(embed=embed, view=view)
 
-##Start Event Command
+## Start Meeting
 @bot.command()
 async def start_meeting(ctx, startTimeStr = None):
 
-	meetingName = format_time_str("Member Meeting %m/%d/%Y", to_time_struct())
+	meetingName = format_time_str("Member Meeting %m/%d/%Y 1", to_time_struct())
 
 	if startTimeStr is None:
 		startTime = time_now()
 	else:
-		startTime = to_secs(parse_time_str(startTimeStr, bot.dateTimeFmt))
+		startTime = Functions.str_to_secs(startTimeStr)
 
 	endTime = startTime + (60 * 60) # Standard 1-hour event
 	duration = endTime - startTime
 
 	DB_Manage.write_event(title = meetingName, isMeeting = 1, start = startTime, end = endTime, duration = duration)
 
-	embed = discord.Embed(
-        title=meetingName,
-        color=discord.Color.blue()
-    )
+	try:
+		attrs = DB_Manage.get_attrs("events", meetingName)
+	except Exception:
+ 		return await ctx.send(f"Event `{meetingName}` not found.")
+
+	embed = discord.Embed(title=meetingName,color=discord.Color.blue())
 	embed.add_field(name="Meeting Time",value=startTime,inline=False)
 	embed.add_field(name="Need Help?",value="DM The Organization Director",inline=False)
-	view = RegisterView()
+	view = RegisterView(event_name=attrs["title"])
 	await ctx.send(embed=embed, view=view)
 
 	await ctx.send("Welcome to the meeting everyone! Please sign in at your earliest convenience.")
@@ -141,7 +175,7 @@ async def end_event(ctx, eventName, endTimeStr = None):
 	if endTimeStr is None:
 		endTime = time_now()
 	else:
-		endTime = to_secs(parse_time_str(endTimeStr, bot.dateTimeFmt))
+		endTime = Functions.str_to_secs(endTimeStr)
 
 	DB_Manage.edit_attr("events", eventName, "end", endTime)
 	DB_Manage.edit_attr("events", eventName, "duration", endTime - startTime)
@@ -184,13 +218,11 @@ async def edit_event(ctx, eventName, attrName, newDataStr):
 
 	newData = Functions.sanitary_eval(newDataStr, locals = {"var": eventAttrs[attrName]})
 
-	try:
+	if attrName in ("start", "end"):
 
-		DB_Manage.edit_attr("events", eventName, attrName, newData)
+		pass
 
-	except Exception as error:
-
-		await ctx.send(error)
+	DB_Manage.edit_attr("events", eventName, attrName, newData)
 
 	# 	if updateEvent(eventName, attrName, newData) == True:
 	# 		await ctx.send("Event data successfully changed")
@@ -221,26 +253,19 @@ async def delete_event(ctx, eventName):
 
 ## Display All Commands
 # @bot.command()
-# async def eventEnd(context, arg1):
-
-# 	eventType = arg1
-
-# 	#*#* Utilize the UI function *endEvent" to conclude a current event
-# 	#There SHOULD only be one event at a time so the function shouldn't need to take any arguments
-
-# 	#endEvent()
-
+# async def help(ctx):
+#
+# 	# pre-existing help command? Involves cogs?
 # 	pass
 
-##See Active Events
+
+## Show Leaderboard
 @bot.command()
-async def events_active(context, *args):
+async def show_leaderboard(ctx, *args):
 
-    #*#* Utilize the function to display active events
+	# yeahhhh not sure about this one lol
+	pass
 
-    #showEvents()?
-
-    pass
 
 ## Christian's Code
 @bot.command()
@@ -251,38 +276,3 @@ async def surveyverify(ctx):
         color=discord.Color.blue()
     )
     await ctx.send(embed=embed, view=VerifyView())
-@bot.command()
-async def register(ctx):
-    embed = discord.Embed(
-        title="Event Title",
-        description="Meeting place and Time.",
-        color=discord.Color.blue()
-    )
-    embed.add_field(name="Food Poll", value="[Click here](https://google.com)", inline=False)
-    view = RegisterView()
-    await ctx.send(embed=embed, view=view)
-
-@bot.command()
-async def attend(ctx, *, event_name: str):
-    try:
-        attrs = DB_Manage.get_attrs("events", event_name)
-    except Exception:
-        return await ctx.send(f"Event `{event_name}` not found.")
-
-    embed = discord.Embed(
-        title=attrs["title"],
-        color=discord.Color.blue()
-    )
-    embed.add_field(
-        name="Instructions",
-        value="Click **ATTEND** to register.",
-        inline=False
-    )
-    embed.add_field(
-        name="🍽️ Food Poll",
-        value="[Click here](https://google.com)",
-        inline=False
-    )
-
-    view = AttendView(event_name=attrs["title"])
-    await ctx.send(embed=embed, view=view)
