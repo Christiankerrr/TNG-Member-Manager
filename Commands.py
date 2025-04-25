@@ -40,11 +40,14 @@ bot = BotClient(command_prefix = "?", intents = discord.Intents.all())
 # Meant to add anyone not currently in the DB to the DB
 # Additionally check permissions??
 @bot.before_invoke
-async def before_command(context):
+async def before_command(ctx):
 
 	await bot.wait_until_ready()
-	if not DB_Manage.locate_member(context.author.id):
-		DB_Manage.write_member(context.author.id, context.author, context.author.display_name)
+	if not DB_Manage.locate_member(ctx.author.id):
+		DB_Manage.write_member(ctx.author.id, ctx.author, ctx.author.display_name)
+	if any(DB_Manage.missing_data(ctx.author.id)):
+		await ctx.send("missing data")
+
 #
 # 	# if not isinstance(bot.userDB[context.author.id], context.command.permissions):
 #     #     await context.send(f"Sorry, you don't have the valid permissions to run that command. This command can only be run by Bot {context.command.permissions.ranking}s and above.")
