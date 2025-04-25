@@ -544,3 +544,34 @@ def locate_member(memberID):
         tngDB.close()
         if error is not None:
             raise error
+
+# Determine if a member is missing any data (size, cut, diet)
+# INPUT: member ID
+# OUTPUT: boolean if missing data, name of any missing attributes
+def missing_data(memberID):
+    tngDB, cursor = get_connection()
+    error = None
+    if not tngDB or not cursor:
+        error = Exception("Database connection error.")
+    try:
+        cursor.execute(
+            "SELECT diet, size, cut FROM members WHERE id = %s",
+            (memberID,)
+        )
+        data = cursor.fetchone()
+        if not data:
+            error = Exception(f"No member found with ID: {memberID}")
+
+        diet, size, cut = data
+        dietMissing = not diet or not diet.strip()
+        sizeMissing = not size or not size.strip()
+        cutMissing = not cut or not cut.strip()
+        return dietMissing, sizeMissing, cutMissing
+
+    except Exception as err:
+        error = err
+    finally:
+        cursor.close()
+        tngDB.close()
+        if error is not None:
+            raise error
