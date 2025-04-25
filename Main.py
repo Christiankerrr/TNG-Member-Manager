@@ -1,14 +1,18 @@
-# FOR MY PYCHARM PEEPS -Matt
-# import pip
-#
-# pip.main(["install", "discord", "pymysql"])
-
-import os
+## WELCOME TO THE DISCORD BOT ##
+import DB_Menu
+import asyncio
 
 from Commands import bot
 
-import DB_Menu
+bot.remove_command('help')
 
-if __name__ == "__main__":
+async def load():
+	await bot.load_extension("cogs.help")
 
-	bot.run(os.getenv("TOKEN"))
+async def main():
+	async with bot:
+		await load()
+		
+		await bot.start("")
+
+asyncio.run(main())

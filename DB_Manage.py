@@ -13,7 +13,7 @@ def get_connection():
         tngDB = pymysql.connect(
             host="localhost",
             user="root",
-            password="MANunited1!1!1!",
+            password="se300",
             database="memberdb"
         )
         return tngDB, tngDB.cursor()
@@ -30,7 +30,7 @@ def create_database():
         tngDB = pymysql.connect(
             host="localhost",
             user="root",
-            password="MANunited1!1!1!"
+            password="se300"
         )
         cursor = tngDB.cursor()
         cursor.execute("SHOW DATABASES")
@@ -88,7 +88,7 @@ def delete_database(dbName):
         tngDB = pymysql.connect(
             host="localhost",
             user="root",
-            password="MANunited1!1!1!"
+            password="se300"
         )
         cursor = tngDB.cursor()
         cursor.execute("SHOW DATABASES")
@@ -537,6 +537,37 @@ def locate_member(memberID):
     try:
         cursor.execute("SELECT 1 FROM members WHERE id = %s LIMIT 1", (str(memberID),))
         return cursor.fetchone() is not None
+    except Exception as err:
+        error = err
+    finally:
+        cursor.close()
+        tngDB.close()
+        if error is not None:
+            raise error
+
+# Determine if a member is missing any data (size, cut, diet)
+# INPUT: member ID
+# OUTPUT: boolean if missing data, name of any missing attributes
+def missing_data(memberID):
+    tngDB, cursor = get_connection()
+    error = None
+    if not tngDB or not cursor:
+        error = Exception("Database connection error.")
+    try:
+        cursor.execute(
+            "SELECT diet, size, cut FROM members WHERE id = %s",
+            (memberID,)
+        )
+        data = cursor.fetchone()
+        if not data:
+            error = Exception(f"No member found with ID: {memberID}")
+
+        diet, size, cut = data
+        dietMissing = not diet or not diet.strip()
+        sizeMissing = not size or not size.strip()
+        cutMissing = not cut or not cut.strip()
+        return dietMissing, sizeMissing, cutMissing
+
     except Exception as err:
         error = err
     finally:
