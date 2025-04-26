@@ -5,8 +5,9 @@ from discord.ext.commands import Context, errors
 from discord.ext.commands._types import BotT
 
 from DB_Manage import get_attrs, edit_attr, get_total_hours, get_total_meetings, get_all_ids, get_event_names
+import Functions
 
-class BotClient (commands.Bot):
+class BotClient(commands.Bot):
 
 	@tasks.loop(hours = 24)
 	async def update_member_db(self):
@@ -22,11 +23,9 @@ class BotClient (commands.Bot):
 
 			memberObj = tngServer.fetch_member(discordID)
 			edit_attr("members", discordID, "tag", memberObj.name)
-			edit_attr("members", discordID, "name", memberObj.nick)
+			edit_attr("members", discordID, "name", memberObj.display_name)
 
-			memberRoleNames = [role.name for role in memberObj.roles]
-
-			if "Executive Board" in memberRoleNames:
+			if Functions.is_exec(memberObj):
 
 				if memberAttrs["hours"] < totalEventHours:
 
@@ -36,7 +35,7 @@ class BotClient (commands.Bot):
 
 					edit_attr("members", discordID, "meetings", totalMeetings)
 
-			elif "Paid Staff" in memberRoleNames:
+			elif Functions.is_paid(memberObj):
 
 				if memberAttrs["hours"] < totalEventHours:
 
@@ -67,7 +66,10 @@ class BotClient (commands.Bot):
 
 		self.strip_after_prefix = True
 
-		self.tngServerID = 1014692801281273868
+		# self.tngServerID = 1014692801281273868
+		self.tngServerID = 1333588190782816367
+
+		self.activeEvents = {}
 
 	async def on_ready(self):
 

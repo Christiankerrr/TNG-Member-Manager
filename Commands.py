@@ -85,6 +85,19 @@ start_registration.adminOnly = True
 @bot.command()
 async def start_event(ctx, eventName, startTimeStr = None):
 
+	try:
+
+		eventAttrs = DB_Manage.get_attrs("events", eventName)
+		if eventAttrs["start"] is not None:
+
+			await ctx.send("That event has already been started.")
+
+			return
+
+	except:
+
+		pass
+
 	if startTimeStr is None:
 
 		startTime = time_now()
@@ -92,10 +105,8 @@ async def start_event(ctx, eventName, startTimeStr = None):
 	else:
 
 		startTime = Functions.str_to_secs(startTimeStr)
-	
-	print(DB_Manage.write_event(title = eventName, isMeeting = 0, start = startTime))
 
-	await UI.sign_in_out(ctx, eventName, Functions.secs_to_str(startTime))
+	bot.activeEvents[eventName] = await UI.event_card(ctx, bot, eventName, startTime)
 start_event.adminOnly = True
 
 ## Start Meeting
@@ -121,31 +132,38 @@ start_meeting.adminOnly = True
 
 ## End Event Command
 @bot.command()
-async def end_event(ctx, eventName, endTimeStr = None):
+async def end_event(ctx, eventName):
+
+	if eventName not in bot.activeEvents.keys():
+
+		await ctx.send("That event has not been started yet.")
+		return
 
 	eventAttrs = DB_Manage.get_attrs("events", eventName)
 
 	if eventAttrs["isMeeting"] == 1:
 
-		await ctx.send("Can not end a meeting.")
+		await ctx.send("Cannot end a meeting.")
 		return
 
 	startTime = eventAttrs["start"]
 	if startTime is None:
 
-		await ctx.send("Can not end an event that has not started.")
+		await ctx.send("Cannot end an event that has not started.")
 		return
 
-	if endTimeStr is None:
-		endTime = time_now()
-	else:
-		endTime = Functions.str_to_secs(endTimeStr)
 
-	DB_Manage.edit_attr("events", eventName, "end", endTime)
-	DB_Manage.edit_attr("events", eventName, "duration", endTime - startTime)
-	# Call UI function to conclude event
-	# ui_func_EndEvent()
-	await ctx.send("The current event has concluded.")
+
+	# bot.activeEvents[eventName].embeds.send_data()
+	#
+	# DB_Manage.edit_attr("events", eventName, "end", endTime)
+	# DB_Manage.edit_attr("events", eventName, "duration", endTime - startTime)
+	#
+	# await bot.activeEvents[eventName].delete()
+	# del bot.activeEvents[eventName]
+	#
+	# await UI.send_message_card(ctx)
+
 end_event.adminOnly = True
 
 ## Show Profile

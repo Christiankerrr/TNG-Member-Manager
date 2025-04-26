@@ -395,12 +395,10 @@ def test_add_attend():
 
         print("\n=== add_attend() Test Complete ===")
 
-# Boolean to run menu
-running = True
+def run_menu():
 
-# Menu
-if __name__ == "__main__":
-    while running:
+    # Menu
+    while True:
         print("1. Create database")
         print("2. Delete database")
         print("3. Test get_attrs function")
@@ -421,6 +419,6 @@ if __name__ == "__main__":
         elif choice == "5":
             test_add_attend()
         elif choice == "10":
-            running = False
+            break
         else:
             print("Enter a valid choice.")

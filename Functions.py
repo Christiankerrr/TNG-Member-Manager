@@ -1,4 +1,7 @@
+from discord.ext import commands
 from time import strftime as format_time_str, localtime as to_time_struct, strptime as parse_time_str, mktime as to_secs
+
+import DB_Manage
 
 dateTimeFmt = "%m/%d/%Y %I:%M %p"
 
@@ -31,3 +34,21 @@ def secs_to_str(secs):
 def str_to_secs(str):
 
 	return to_secs(parse_time_str(str, dateTimeFmt))
+
+def is_exec(memberObj):
+
+	return "Executive Board" in [role.name for role in memberObj.roles]
+
+def is_paid(memberObj):
+
+	return "Paid Staff" in [role.name for role in memberObj.roles]
+
+async def convert_to_id(ctx, identifier):
+
+	memberObj = await commands.MemberConverter().convert(ctx, identifier)
+
+	if not DB_Manage.locate_member(memberObj.id):
+
+		DB_Manage.write_member(memberObj.id, memberObj.name, memberObj.nick)
+
+	return memberObj.id

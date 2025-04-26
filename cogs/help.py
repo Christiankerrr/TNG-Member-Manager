@@ -5,8 +5,9 @@ import discord
 from discord.ext import commands
 from discord.ui import View, Button
 
-PAGE_COMMANDS = 4
+import Functions
 
+PAGE_COMMANDS = 4
 
 class HelpButtons(View):
     def __init__(self, embeds):
@@ -42,9 +43,7 @@ class Help(commands.Cog):
     @commands.command(name="help")
     async def help_cmd(self, ctx):
 
-        isExec = any(role.name == "Executive Board" for role in ctx.author.roles)
-
-        if isExec:
+        if Functions.is_exec(ctx.author):
             visibleCommands = [cmd for cmd in self.bot.commands if not cmd.hidden]
         else:
             visibleCommands = [cmd for cmd in self.bot.commands if not getattr(cmd, "adminOnly", False)]
@@ -53,7 +52,7 @@ class Help(commands.Cog):
         pages = []
 
         for i in range(totalPages):
-            embed = discord.Embed(title=f"Welcome to the {'Executive' if isExec else 'Member'} Help Page -- Page {i + 1}/{totalPages}", color=discord.Color.dark_magenta())
+            embed = discord.Embed(title=f"Welcome to the {'Executive' if Functions.is_exec(ctx.author) else 'Member'} Help Page -- Page {i + 1}/{totalPages}", color=discord.Color.dark_magenta())
             
             for cmd in visibleCommands[i*PAGE_COMMANDS:(i+1)*PAGE_COMMANDS]:
                 cmdInfo = f"{ctx.prefix}{cmd.name} {cmd.signature}".strip()

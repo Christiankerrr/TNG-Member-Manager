@@ -1,8 +1,14 @@
 ## WELCOME TO THE DISCORD BOT ##
-import DB_Menu
+
 import asyncio
+import os
 
 from Commands import bot
+import DB_Menu
+
+# bot.run(os.getenv("TOKEN"))
+
+DB_Menu.run_menu()
 
 bot.remove_command('help')
 
@@ -12,7 +18,7 @@ async def load():
 async def main():
 	async with bot:
 		await load()
-		
-		await bot.start("")
+
+		await bot.start(os.getenv("TOKEN"))
 
 asyncio.run(main())

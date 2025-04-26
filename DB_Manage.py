@@ -13,7 +13,7 @@ def get_connection():
         tngDB = pymysql.connect(
             host="localhost",
             user="root",
-            password="se300",
+            password="data1013$",
             database="memberdb"
         )
         return tngDB, tngDB.cursor()
@@ -30,7 +30,7 @@ def create_database():
         tngDB = pymysql.connect(
             host="localhost",
             user="root",
-            password="se300"
+            password="data1013$"
         )
         cursor = tngDB.cursor()
         cursor.execute("SHOW DATABASES")
@@ -88,7 +88,7 @@ def delete_database(dbName):
         tngDB = pymysql.connect(
             host="localhost",
             user="root",
-            password="se300"
+            password="data1013$"
         )
         cursor = tngDB.cursor()
         cursor.execute("SHOW DATABASES")
@@ -216,7 +216,7 @@ def remove_event(eventName):
 
 # Edit the attributes of a member or event
 # INPUT: mode, recordID (tag, ID, or name), attribute name, new attribute value
-def edit_attr(mode, recordIdentifier, attrName, newAttrVal, forceEdit=False):
+def edit_attr(mode, recordIdentifier, attrName, newAttrVal, forceEdit = False):
     tngDB, cursor = get_connection()
     error = None
     if not tngDB or not cursor:
@@ -266,7 +266,7 @@ def edit_attr(mode, recordIdentifier, attrName, newAttrVal, forceEdit=False):
         if mode == "events" and not forceEdit:
             cursor.execute(f"SELECT isMeeting FROM {table} WHERE title = %s", (recordIdentifier,))
             isMeeting = cursor.fetchone()
-            if isMeeting and isMeeting[0] == True and attrName == "end":
+            if isMeeting and isMeeting[0] and attrName == "end":
                 error = Exception("Cannot modify 'end' for a meeting unless forceEdit is True.")
 
         if error is None:
@@ -536,6 +536,25 @@ def locate_member(memberID):
         error = Exception("Database connection error.")
     try:
         cursor.execute("SELECT 1 FROM members WHERE id = %s LIMIT 1", (str(memberID),))
+        return cursor.fetchone() is not None
+    except Exception as err:
+        error = err
+    finally:
+        cursor.close()
+        tngDB.close()
+        if error is not None:
+            raise error
+
+# Determine if a member exists in the database
+# INPUT: member ID
+# OUTPUT: boolean
+def locate_event(eventName):
+    tngDB, cursor = get_connection()
+    error = None
+    if not tngDB or not cursor:
+        error = Exception("Database connection error.")
+    try:
+        cursor.execute("SELECT 1 FROM events WHERE id = %s LIMIT 1", (str(eventName),))
         return cursor.fetchone() is not None
     except Exception as err:
         error = err
