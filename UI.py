@@ -18,12 +18,10 @@ class SignInOutView(discord.ui.View):
         @discord.ui.button(label = "Confirm", style = discord.ButtonStyle.green)
         async def confirm_sign_in(self, interaction, button):
 
-            memberObjID = interaction.user.id
+            signInTime = self.parentUI.pendingApproval[self.memberObj.id]
+            del self.parentUI.pendingApproval[self.memberObj.id]
 
-            signInTime = self.parentUI.pendingApproval[memberObjID]
-            del self.parentUI.pendingApproval[memberObjID]
-
-            self.parentUI.signedInMembers[memberObjID] = signInTime
+            self.parentUI.signedInMembers[self.memberObj.id] = signInTime
 
             await self.memberObj.send(f"Your sign in request to \"{self.parentUI.eventName}\" was confirmed!")
 
@@ -32,9 +30,7 @@ class SignInOutView(discord.ui.View):
         @discord.ui.button(label = "Deny", style = discord.ButtonStyle.red)
         async def deny_sign_in(self, interaction, button):
 
-            memberObjID = interaction.user.id
-
-            del self.parentUI.pendingApproval[memberObjID]
+            del self.parentUI.pendingApproval[self.memberObj.id]
 
             await self.memberObj.send(f"Your sign in request to \"{self.parentUI.eventName}\" was denied. If you believe this was a mistake, DM an executive board member and sign in again.")
 
