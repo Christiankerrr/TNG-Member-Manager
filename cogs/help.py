@@ -7,6 +7,10 @@ from discord.ui import View, Button
 
 import Functions
 
+## Optional L Emojis: ⬅️, ◀️, 👨‍🦽
+## Optional R Emojis: ➡️, ▶️, 👩‍🦯‍➡️
+
+
 PAGE_COMMANDS = 4
 
 class HelpButtons(View):
@@ -20,7 +24,7 @@ class HelpButtons(View):
         if len(embeds) == 1:
             self.r_button.disabled = True
 
-    @discord.ui.button(label="🡸", style=discord.ButtonStyle.success)
+    @discord.ui.button(emoji="◀️", style=discord.ButtonStyle.success)
     async def l_button(self, interaction: discord.Interaction, button: Button):
         self.current -= 1
         if self.current == 0:
@@ -28,7 +32,7 @@ class HelpButtons(View):
         self.r_button.disabled = False
         await interaction.response.edit_message(embed=self.embeds[self.current], view=self)
 
-    @discord.ui.button(label="🡺", style=discord.ButtonStyle.success)
+    @discord.ui.button(emoji="▶️", style=discord.ButtonStyle.success)
     async def r_button(self, interaction: discord.Interaction, button: Button):
         self.current += 1
         if self.current == len(self.embeds) - 1:
@@ -40,7 +44,7 @@ class Help(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="help")
+    @commands.command(name="help", help="Display All Role-Usable Commands")
     async def help_cmd(self, ctx):
 
         if Functions.is_exec(ctx.author):
@@ -58,7 +62,7 @@ class Help(commands.Cog):
                 cmdInfo = f"{ctx.prefix}{cmd.name} {cmd.signature}".strip()
                 embed.add_field(name=cmdInfo, value=cmd.help or "No description provided.", inline=False)
             
-            embed.set_footer(text="Use 🡸 and 🡺 to navigate")
+            embed.set_footer(text="Use ◀️ and ▶️ to navigate")
             pages.append(embed)
 
         view = HelpButtons(pages)

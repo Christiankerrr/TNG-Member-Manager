@@ -44,47 +44,46 @@ async def before_command(ctx):
 	await bot.wait_until_ready()
 	if not DB_Manage.locate_member(ctx.author.id):
 		DB_Manage.write_member(ctx.author.id, ctx.author, ctx.author.display_name)
+
+	if any(DB_Manage.missing_data(ctx.author.id)):
+		await ctx.send("Missing data")
 #
 # 	# if not isinstance(bot.userDB[context.author.id], context.command.permissions):
 #     #     await context.send(f"Sorry, you don't have the valid permissions to run that command. This command can only be run by Bot {context.command.permissions.ranking}s and above.")
 
-
 ## Print Databases
-@bot.command()
+@bot.command(help="Show the Member Data")
 async def show_members(ctx):
 
 	await ctx.send(DB_Manage.print_table("members"))
+
 show_members.adminOnly = True
 
-@bot.command()
-async def shit_pants(ctx):
-
-	raise Exception("NOOOOOOOOO")
-shit_pants.adminOnly = False
-
-@bot.command()
+@bot.command(help="Show the Event Data")
 async def show_events(ctx):
 
 	await ctx.send(DB_Manage.print_table("events"))
+
 show_events.adminOnly = False
 
-## Write Member to Database
-@bot.command()
-async def write_member(ctx, memberID, memberTag, memberName):
-
-	DB_Manage.write_member(memberID, memberTag, memberName)
-write_member.adminOnly = True
-
-## Start Event Registration 
-@bot.command()
+## Start Event Registration
+@bot.command(help="Begin Registration for an Event")
 async def start_registration(ctx, eventName, link):
+
 	pass
+
 start_registration.adminOnly = True
 
 ## Start Event
-@bot.command()
+@bot.command(help="Start an Event")
 async def start_event(ctx, eventName, startTimeStr = None):
 
+	if eventName in bot.activeEvents:
+
+		await ctx.send("That event has been scheduled to start already.")
+
+		return
+	
 	try:
 
 		eventAttrs = DB_Manage.get_attrs("events", eventName)
@@ -107,10 +106,12 @@ async def start_event(ctx, eventName, startTimeStr = None):
 		startTime = Functions.str_to_secs(startTimeStr)
 
 	bot.activeEvents[eventName] = await UI.event_card(ctx, bot, eventName, startTime)
+	print(bot.activeEvents)
+
 start_event.adminOnly = True
 
 ## Start Meeting
-@bot.command()
+@bot.command(help="Start a Meeting")
 async def start_meeting(ctx, startTimeStr = None):
 
 	meetingName = format_time_str("Member Meeting %m/%d/%Y", to_time_struct())
@@ -131,7 +132,7 @@ async def start_meeting(ctx, startTimeStr = None):
 start_meeting.adminOnly = True
 
 ## End Event Command
-@bot.command()
+@bot.command(help="End an Event")
 async def end_event(ctx, eventName):
 
 	if eventName not in bot.activeEvents.keys():
@@ -167,7 +168,7 @@ async def end_event(ctx, eventName):
 end_event.adminOnly = True
 
 ## Show Profile
-@bot.command()
+@bot.command(help="Show a TNG Member's Profile Information")
 async def show_profile(ctx, memberTag):
 
 	member = await commands.MemberConverter().convert(ctx, memberTag)
@@ -177,7 +178,7 @@ async def show_profile(ctx, memberTag):
 show_profile.adminOnly = False
 
 ## Manually Change Data
-@bot.command()
+@bot.command(help="Manually Alter Specific Member Data")
 async def edit_member(ctx, memberTag, attrName, newDataStr):
 
 	member = await commands.MemberConverter().convert(ctx, memberTag)
@@ -196,7 +197,7 @@ async def edit_member(ctx, memberTag, attrName, newDataStr):
 edit_member.adminOnly = True
 
 ## Edit Event
-@bot.command()
+@bot.command(help="Manually Alter Specific Event Data")
 async def edit_event(ctx, eventName, attrName, newDataStr):
 
 	eventAttrs = DB_Manage.get_attrs("events", eventName)
@@ -221,7 +222,7 @@ async def edit_event(ctx, eventName, attrName, newDataStr):
 edit_event.adminOnly = True
 
 ## Delete Member
-@bot.command()
+@bot.command(help="Delete Data for a Single Member")
 async def delete_member(ctx, memberID):
 
 	# memberID = await commands.MemberConverter().convert(ctx, memberTag)
@@ -231,36 +232,16 @@ async def delete_member(ctx, memberID):
 delete_member.adminOnly = True
 
 ## Delete Event
-@bot.command()
+@bot.command(help="Delete Data for a Single Event")
 async def delete_event(ctx, eventName):
 
 	# Call MySQL function to delete event
 	DB_Manage.remove_event(eventName)
 delete_event.adminOnly = True
 
-## Display All Commands
-# @bot.command()
-# async def help(ctx):
-#
-# 	# pre-existing help command? Involves cogs?
-# 	pass
-
-
 ## Show Leaderboard
-@bot.command()
+@bot.command(help="Show the TNG Member Leaderboard")
 async def show_leaderboard(ctx, *args):
 
-	# yeahhhh not sure about this one lol
 	pass
 show_leaderboard.adminOnly = False
-
-## Christian's Code
-@bot.command()
-async def surveyverify(ctx):
-    embed = discord.Embed(
-        title="Welcome to the TNG Discord",
-        description="Click the button below to provide information for all TNG Events.",
-        color=discord.Color.blue()
-    )
-    await ctx.send(embed=embed, view=VerifyView())
-surveyverify.adminOnly = False
