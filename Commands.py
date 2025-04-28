@@ -71,7 +71,6 @@ show_events.adminOnly = False
 async def start_registration(ctx, eventName, link):
 
 	pass
-
 start_registration.adminOnly = True
 
 ## Start Event
@@ -172,9 +171,6 @@ end_event.adminOnly = True
 async def show_profile(ctx, memberTag):
 
 	member = await commands.MemberConverter().convert(ctx, memberTag)
-
-	# Call UI function to display profile
-	# ui_func_DisplayProfile(memberID)
 show_profile.adminOnly = False
 
 ## Manually Change Data
@@ -225,9 +221,6 @@ edit_event.adminOnly = True
 @bot.command(help="Delete Data for a Single Member")
 async def delete_member(ctx, memberID):
 
-	# memberID = await commands.MemberConverter().convert(ctx, memberTag)
-
-	# Call MySQL function to delete member
 	DB_Manage.remove_member(memberID)
 delete_member.adminOnly = True
 
@@ -235,13 +228,11 @@ delete_member.adminOnly = True
 @bot.command(help="Delete Data for a Single Event")
 async def delete_event(ctx, eventName):
 
-	# Call MySQL function to delete event
 	DB_Manage.remove_event(eventName)
 delete_event.adminOnly = True
 
 ## Show Leaderboard
 @bot.command(help="Show the TNG Member Leaderboard")
 async def show_leaderboard(ctx, *args):
-
 	pass
 show_leaderboard.adminOnly = False
