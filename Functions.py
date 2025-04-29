@@ -49,6 +49,6 @@ async def convert_to_id(ctx, identifier):
 
 	if not DB_Manage.locate_member(memberObj.id):
 
-		DB_Manage.write_member(memberObj.id, memberObj.name, memberObj.nick)
+		DB_Manage.write_member(memberObj.id, memberObj.name, memberObj.display_name)
 
 	return memberObj.id

@@ -146,7 +146,7 @@ def write_member(memberID, newTag, name, diet=None, size=None, cut=None,
 
 # Add an event to the event table
 # INPUT: title and isMeeting, all other values can be defaults
-def write_event(title, isMeeting, start=None, end=None, duration=0, attendees=""):
+def write_event(title, isMeeting, start=None, end=None, duration=None, attendees=""):
     tngDB, cursor = get_connection()
     error = None
     if not tngDB or not cursor:

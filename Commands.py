@@ -42,8 +42,10 @@ bot = BotClient(command_prefix = "?", intents = discord.Intents.all())
 async def before_command(ctx):
 
 	await bot.wait_until_ready()
+
 	if not DB_Manage.locate_member(ctx.author.id):
-		DB_Manage.write_member(ctx.author.id, ctx.author, ctx.author.display_name)
+
+		DB_Manage.write_member(ctx.author.id, ctx.author.name, ctx.author.display_name)
 #
 # 	# if not isinstance(bot.userDB[context.author.id], context.command.permissions):
 #     #     await context.send(f"Sorry, you don't have the valid permissions to run that command. This command can only be run by Bot {context.command.permissions.ranking}s and above.")
@@ -113,21 +115,17 @@ start_event.adminOnly = True
 @bot.command()
 async def start_meeting(ctx, startTimeStr = None):
 
-	meetingName = format_time_str("Member Meeting %m/%d/%Y", to_time_struct())
-
 	if startTimeStr is None:
+
 		startTime = time_now()
+
 	else:
+
 		startTime = Functions.str_to_secs(startTimeStr)
 
-	endTime = startTime + (60 * 60) # Standard 1-hour event
-	duration = endTime - startTime
+	meetingName = format_time_str("Member Meeting %m/%d/%Y", to_time_struct(startTime))
 
-	DB_Manage.write_event(title = meetingName, isMeeting = 1, start = startTime, end = endTime, duration = duration)
-
-	# # Call UI function to start an event with the sign in/out buttons, doesn't need special name
-	# ui_func_StartMeeting()
-	await ctx.send("Welcome to the meeting everyone! Please sign in at your earliest convenience.")
+	bot.activeEvents[meetingName] = await UI.meeting_card(ctx, bot, meetingName, startTime)
 start_meeting.adminOnly = True
 
 ## End Event Command
@@ -139,23 +137,21 @@ async def end_event(ctx, eventName):
 		await ctx.send("That event has not been started yet.")
 		return
 
-	eventAttrs = DB_Manage.get_attrs("events", eventName)
-
-	if eventAttrs["isMeeting"] == 1:
-
-		await ctx.send("Cannot end a meeting.")
-		return
-
-	startTime = eventAttrs["start"]
-	if startTime is None:
-
-		await ctx.send("Cannot end an event that has not started.")
-		return
-
-
-
-	# bot.activeEvents[eventName].embeds.send_data()
+	# eventAttrs = DB_Manage.get_attrs("events", eventName)
 	#
+	# if eventAttrs["isMeeting"] == 1:
+	#
+	# 	await ctx.send("Cannot end a meeting.")
+	# 	return
+	#
+	# startTime = eventAttrs["start"]
+	# if startTime is None:
+	#
+	# 	await ctx.send("Cannot end an event that has not started.")
+	# 	return
+
+	await bot.activeEvents[eventName].close_event()
+
 	# DB_Manage.edit_attr("events", eventName, "end", endTime)
 	# DB_Manage.edit_attr("events", eventName, "duration", endTime - startTime)
 	#

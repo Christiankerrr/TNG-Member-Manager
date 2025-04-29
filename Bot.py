@@ -4,7 +4,7 @@ from time import time as time_now
 from discord.ext.commands import Context, errors
 from discord.ext.commands._types import BotT
 
-from DB_Manage import get_attrs, edit_attr, get_total_hours, get_total_meetings, get_all_ids, get_event_names
+import DB_Manage
 import Functions
 
 class BotClient(commands.Bot):
@@ -14,51 +14,51 @@ class BotClient(commands.Bot):
 
 		tngServer = self.get_guild(self.tngServerID)
 
-		totalEventHours = get_total_hours()
-		totalMeetings = get_total_meetings()
+		totalEventHours = DB_Manage.get_total_hours()
+		totalMeetings = DB_Manage.get_total_meetings()
 
-		for discordID in get_all_ids():
+		for discordID in DB_Manage.get_all_ids():
 
-			memberAttrs = get_attrs("members", discordID)
+			memberAttrs = DB_Manage.get_attrs("members", discordID)
 
 			memberObj = tngServer.fetch_member(discordID)
-			edit_attr("members", discordID, "tag", memberObj.name)
-			edit_attr("members", discordID, "name", memberObj.display_name)
+			DB_Manage.edit_attr("members", discordID, "tag", memberObj.name)
+			DB_Manage.edit_attr("members", discordID, "name", memberObj.display_name)
 
 			if Functions.is_exec(memberObj):
 
 				if memberAttrs["hours"] < totalEventHours:
 
-					edit_attr("members", discordID, "hours", totalEventHours)
+					DB_Manage.edit_attr("members", discordID, "hours", totalEventHours)
 
 				if memberAttrs["meetings"] < totalMeetings:
 
-					edit_attr("members", discordID, "meetings", totalMeetings)
+					DB_Manage.edit_attr("members", discordID, "meetings", totalMeetings)
 
 			elif Functions.is_paid(memberObj):
 
 				if memberAttrs["hours"] < totalEventHours:
 
-					edit_attr("members", discordID, "hours", totalEventHours)
+					DB_Manage.edit_attr("members", discordID, "hours", totalEventHours)
 
 			isActive = (float(memberAttrs["hours"]) >= totalEventHours/2) and (float(memberAttrs["meetings"]) >= totalMeetings/2)
-			edit_attr("members", discordID, "isActive", isActive)
+			DB_Manage.edit_attr("members", discordID, "isActive", isActive)
 
 	@tasks.loop(hours = 24)
 	async def update_event_db(self):
 
-		for eventName in get_event_names():
+		for eventName in DB_Manage.get_event_names():
 
-			eventAttrs = get_attrs("events", eventName)
+			eventAttrs = DB_Manage.get_attrs("events", eventName)
 
 			if (eventAttrs["start"] is not None) and (eventAttrs["end"] is not None):
 
-				edit_attr("events", eventName, "duration", eventAttrs["end"] - eventAttrs["start"])
+				DB_Manage.edit_attr("events", eventName, "duration", eventAttrs["end"] - eventAttrs["start"])
 
 			if (eventAttrs["isMeeting"] == 0) and (eventAttrs["end"] is None) and (time_now() - eventAttrs["start"] > 24 * 60 * 60):
 
-				edit_attr("events", eventName, "end", time_now())
-				edit_attr("events", eventName, "duration", eventAttrs["end"] - eventAttrs["start"])
+				DB_Manage.edit_attr("events", eventName, "end", time_now())
+				DB_Manage.edit_attr("events", eventName, "duration", eventAttrs["end"] - eventAttrs["start"])
 
 	def __init__(self, *args, **kwargs):
 
@@ -67,7 +67,7 @@ class BotClient(commands.Bot):
 		self.strip_after_prefix = True
 
 		# self.tngServerID = 1014692801281273868
-		self.tngServerID = 1333588190782816367
+		self.tngServerID = 1333588190782816367 # TEST SERVER ID
 
 		self.activeEvents = {}
 
