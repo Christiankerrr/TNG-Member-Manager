@@ -378,3 +378,27 @@ def get_attendees(eventName):
         tngDB.close()
         if error is not None:
             raise error
+		
+
+## Jacob's Additions: 4/25/2025
+@bot.command()
+async def shit_pants(ctx):
+
+	raise Exception("NOOOOOOOOO")
+shit_pants.adminOnly = False
+
+@bot.command()
+async def surveyverify(ctx):
+    embed = discord.Embed(
+        title="Welcome to the TNG Discord",
+        description="Click the button below to provide information for all TNG Events.",
+        color=discord.Color.blue()
+    )
+    await ctx.send(embed=embed, view=VerifyView())
+surveyverify.adminOnly = False
+
+@bot.command()
+async def write_member(ctx, memberID, memberTag, memberName):
+
+	DB_Manage.write_member(memberID, memberTag, memberName)
+write_member.adminOnly = True
